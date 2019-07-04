@@ -1,8 +1,9 @@
-use std::io;
-use std::env;
-use std::io::Write;
-use std::path::Path;
-use std::fs::{self, DirEntry};
+use std::{
+    env,
+    fs::{self, File},
+    io::{prelude::*,self, BufReader, Write},
+    path::Path,
+};
 
 extern crate rpassword;
 
@@ -10,6 +11,7 @@ fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
+    let _ignored: Vec<String> = read_gitignore().unwrap();
     let _args: Vec<String> = env::args().collect();
 
     println!("Please enter your Github credentials.");
@@ -22,7 +24,18 @@ fn main() {
         .expect("Failed to read line");
     let _pass = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
 
-    read_files(Path::new("./"));
+    read_files(Path::new("./")).unwrap();
+}
+
+fn read_gitignore() -> io::Result<Vec<String>> {
+    let file = File::open(".gitignore")?;
+    let buffer = BufReader::new(file);
+
+    let mut vector: Vec<String> = buffer.lines()
+        .map(|l| l.expect("Could not parse line"))
+        .collect();
+    vector.push(String::from(".git"));
+    Ok(vector)
 }
 
 fn read_files(dir: &Path) -> io::Result<()> {
