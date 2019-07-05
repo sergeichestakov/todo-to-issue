@@ -11,7 +11,10 @@ fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
-    let _ignored: Vec<String> = read_gitignore().unwrap();
+    let _ignored =
+        if Path::new(".gitignore").is_file() { read_gitignore().unwrap() }
+        else { vec![String::from(".git")] };
+
     let _args: Vec<String> = env::args().collect();
 
     println!("Please enter your Github credentials.");
