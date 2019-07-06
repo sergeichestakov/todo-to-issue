@@ -1,22 +1,24 @@
 use std::{
-    env,
-    fs::{self, File},
-    io::{prelude::*,self, BufReader, Write},
+    fs::{self},
+    io::{self, Write},
     path::Path,
+    process::Command,
+    str,
 };
-
-extern crate rpassword;
 
 fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
-    let _ignored =
-        if Path::new(".gitignore").is_file() { read_gitignore().unwrap() }
-        else { vec![String::from(".git")] };
 
-    let _args: Vec<String> = env::args().collect();
+    let (_username, _password) = get_credentials();
 
+    let _files = get_tracked_files();
+
+    read_files(Path::new("./")).unwrap();
+}
+
+fn get_credentials() -> (String, String) {
     println!("Please enter your Github credentials.");
     print!("Username: ");
     io::stdout().flush().unwrap();
@@ -25,32 +27,35 @@ fn main() {
 
     io::stdin().read_line(&mut username)
         .expect("Failed to read line");
-    let _pass = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
+    let password  = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
 
-    read_files(Path::new("./")).unwrap();
+    (username, password)
 }
 
-fn read_gitignore() -> io::Result<Vec<String>> {
-    let file = File::open(".gitignore")?;
-    let buffer = BufReader::new(file);
+fn get_tracked_files() -> Vec<String> {
+    let command = Command::new("git")
+        .arg("ls-tree")
+        .arg("-r")
+        .arg("master")
+        .arg("--name-only")
+        .output()
+        .expect("Failed to execute command");
+    let output = str::from_utf8(&command.stdout).unwrap();
+    let files: Vec<&str> = output.split("\n").collect();
 
-    let mut vector: Vec<String> = buffer.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect();
-    vector.push(String::from(".git"));
-    Ok(vector)
+    files.into_iter()
+        .map(|string| String::from(string))
+        .filter(|string| !string.is_empty())
+        .collect()
 }
 
 fn read_files(dir: &Path) -> io::Result<()> {
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                read_files(&path)?;
-            } else {
-                println!("{}", path.display());
-            }
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            read_files(&path)?;
+        } else {
+            println!("{}", path.display());
         }
     }
     Ok(())
