@@ -1,6 +1,6 @@
 use std::{
-    fs::{self},
-    io::{self, Write},
+    fs::{File},
+    io::{self, prelude::*, BufReader, Write},
     path::Path,
     process::Command,
     str,
@@ -13,9 +13,9 @@ fn main() {
 
     let (_username, _password) = get_credentials();
 
-    let _files = get_tracked_files();
+    let files = get_tracked_files();
 
-    read_files(Path::new("./")).unwrap();
+    read_files(files).unwrap();
 }
 
 fn get_credentials() -> (String, String) {
@@ -49,14 +49,14 @@ fn get_tracked_files() -> Vec<String> {
         .collect()
 }
 
-fn read_files(dir: &Path) -> io::Result<()> {
-    for entry in fs::read_dir(dir)? {
-        let path = entry?.path();
-        if path.is_dir() {
-            read_files(&path)?;
-        } else {
-            println!("{}", path.display());
+fn read_files(files: Vec<String>) -> io::Result<()> {
+    for path in files {
+        let file = File::open(path)?;
+        let buffer = BufReader::new(file);
+        for line in buffer.lines() {
+            println!("{}", line.unwrap());
         }
     }
+
     Ok(())
 }
