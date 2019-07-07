@@ -1,5 +1,5 @@
 use std::{
-    fs::{File},
+    fs::File,
     io::{self, prelude::*, BufReader, Write},
     path::Path,
     process::Command,
@@ -49,12 +49,33 @@ fn get_tracked_files() -> Vec<String> {
         .collect()
 }
 
+fn contains_todo(line: &str) -> bool {
+    let comment = match line.find("//") {
+        Some(value) => Some(value),
+        None => line.find("#"),
+    };
+
+    let todo = line.find("TODO");
+    if comment.is_some() && todo.is_some() {
+        let comment_index = comment.unwrap();
+        let todo_index = todo.unwrap();
+        if todo_index > comment_index {
+            return true;
+        }
+    }
+
+    false
+}
+
 fn read_files(files: Vec<String>) -> io::Result<()> {
     for path in files {
         let file = File::open(path)?;
         let buffer = BufReader::new(file);
-        for line in buffer.lines() {
-            println!("{}", line.unwrap());
+        for line_option in buffer.lines() {
+            let line = line_option.unwrap();
+            if contains_todo(&line) {
+                println!("{}", line);
+            }
         }
     }
 
