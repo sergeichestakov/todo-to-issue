@@ -27,7 +27,7 @@ fn get_credentials() -> (String, String) {
 
     io::stdin().read_line(&mut username)
         .expect("Failed to read line");
-    let password  = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
+    let password = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
 
     (username, password)
 }
@@ -67,6 +67,18 @@ fn contains_todo(line: &str) -> bool {
     false
 }
 
+fn parse_line(line: &str) -> &str {
+    let vec: Vec<&str> = line.split("TODO").collect();
+    let after_todo = vec[1];
+    let description = if after_todo.starts_with(":") {
+        &after_todo[1..]
+    } else {
+        after_todo
+    }.trim();
+
+    description
+}
+
 fn read_files(files: Vec<String>) -> io::Result<()> {
     for path in files {
         let file = File::open(path)?;
@@ -74,7 +86,8 @@ fn read_files(files: Vec<String>) -> io::Result<()> {
         for line_option in buffer.lines() {
             let line = line_option.unwrap();
             if contains_todo(&line) {
-                println!("{}", line);
+                let description = parse_line(&line);
+                println!("{}", description);
             }
         }
     }
