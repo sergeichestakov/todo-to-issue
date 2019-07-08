@@ -67,6 +67,23 @@ fn contains_todo(line: &str) -> bool {
     false
 }
 
+fn get_remote_name() -> String {
+    let command = Command::new("git")
+        .arg("remote")
+        .arg("get-url")
+        .arg("origin")
+        .output()
+        .expect("Failed to execute command");
+    let output = str::from_utf8(&command.stdout).unwrap();
+    // Remove protocol and domain from url
+    let split: Vec<&str> = output.split("github.com/").collect();
+    let remote = String::from(split[1]);
+
+    // Remote .git suffix
+    let vec: Vec<&str> = remote.split(".git").collect();
+    String::from(vec[0])
+}
+
 fn parse_line(line: &str) -> &str {
     let vec: Vec<&str> = line.split("TODO").collect();
     let after_todo = vec[1];
@@ -80,6 +97,7 @@ fn parse_line(line: &str) -> &str {
 }
 
 fn read_files(files: Vec<String>) -> io::Result<()> {
+    let _remote = get_remote_name();
     for path in files {
         let file = File::open(path)?;
         let buffer = BufReader::new(file);
