@@ -84,28 +84,47 @@ fn get_remote_name() -> String {
     String::from(vec[0])
 }
 
-fn parse_line(line: &str) -> &str {
+fn parse_title(line: &str) -> String {
     let vec: Vec<&str> = line.split("TODO").collect();
     let after_todo = vec[1];
-    let description = if after_todo.starts_with(":") {
+    let title = if after_todo.starts_with(":") {
         &after_todo[1..]
     } else {
         after_todo
     }.trim();
 
-    description
+    String::from(title)
+}
+
+fn create_description(line_number: &u32, file_path: &str) -> String {
+    format!("Found a TODO comment on line {} of file {}",
+            line_number, file_path).to_string()
+}
+
+fn open_issue(_client: &reqwest::Client, _remote: &str,
+              _title: &str, _description: &str) ->
+    Result<(), Box<std::error::Error>> {
+
+    Ok(())
 }
 
 fn read_files(files: Vec<String>) -> io::Result<()> {
-    let _remote = get_remote_name();
+    let client = reqwest::Client::new();
+    let remote_repo = get_remote_name();
     for path in files {
-        let file = File::open(path)?;
+        let file = File::open(&path)?;
         let buffer = BufReader::new(file);
+
+        let mut line_number = 0;
         for line_option in buffer.lines() {
             let line = line_option.unwrap();
+            line_number += 1;
+
             if contains_todo(&line) {
-                let description = parse_line(&line);
-                println!("{}", description);
+                let title = parse_title(&line);
+                let description = create_description(&line_number, &path);
+                let _result = open_issue(&client, &remote_repo,
+                                           &title, &description);
             }
         }
     }
