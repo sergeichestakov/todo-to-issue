@@ -6,23 +6,29 @@ use std::{
     process::Command,
     str,
 };
+use reqwest::StatusCode;
 use reqwest::header::AUTHORIZATION;
+
+const API_ENDPOINT: &str = "https://api.github.com";
+const TODO: &str = "TODO";
 
 fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
 
-    let token = get_token();
+    let token = get_access_token();
 
     let files = get_tracked_files();
 
-    read_files(files, token).unwrap();
+    read_files(files, token)
+        .expect("Failed to read files");
 }
 
-fn get_token() -> String {
+fn get_access_token() -> String {
     println!("Please enter your personal access token.");
-    rpassword::read_password_from_tty(Some("Token: ")).unwrap()
+    rpassword::read_password_from_tty(Some("Token: "))
+        .expect("Failed to read token")
 }
 
 fn get_tracked_files() -> Vec<String> {
@@ -48,7 +54,7 @@ fn contains_todo(line: &str) -> bool {
         None => line.find("#"),
     };
 
-    let todo = line.find("TODO");
+    let todo = line.find(TODO);
     if comment.is_some() && todo.is_some() {
         let comment_index = comment.unwrap();
         let todo_index = todo.unwrap();
@@ -78,7 +84,7 @@ fn get_remote_name() -> String {
 }
 
 fn parse_title(line: &str) -> String {
-    let vec: Vec<&str> = line.split("TODO").collect();
+    let vec: Vec<&str> = line.split(TODO).collect();
     let after_todo = vec[1];
     let title = if after_todo.starts_with(":") {
         &after_todo[1..]
@@ -94,6 +100,38 @@ fn create_description(line_number: &u32, file_path: &str) -> String {
             line_number, file_path).to_string()
 }
 
+fn handle_status_code(status: StatusCode, title: &str) {
+    match status {
+        StatusCode::CREATED => {
+            println!("Successfully created issue with title: {}", title);
+        }
+        StatusCode::UNAUTHORIZED => {
+            panic!(
+                "Unathorized request. \
+                Make sure your access token is valid and \
+                you have pull access to the repository."
+            );
+        }
+        StatusCode::GONE => {
+            panic!("Issues are disabled in this repository.");
+        }
+        StatusCode::FORBIDDEN => {
+            panic!(
+                "You have reached the GitHub API rate limit. \
+                Please try again later."
+            );
+        }
+        StatusCode::NOT_FOUND => {
+            panic!(
+                "Repo or username not found. \
+                If your repository is private check that \
+                your access token has the correct permissions."
+            );
+        }
+        s => panic!("Received unexpected status code {}", s),
+    };
+}
+
 fn open_issue(client: &reqwest::Client, remote: &str,
               title: &str, description: &str, token: &str) ->
     Result<(), Box<std::error::Error>> {
@@ -102,14 +140,15 @@ fn open_issue(client: &reqwest::Client, remote: &str,
     params.insert("body", description);
 
     // POST /repos/:owner/:repo/issues
-    let url = format!("https://api.github.com/repos/{}/issues", remote).to_string();
+    let url = format!("{}/repos/{}/issues", API_ENDPOINT, remote).to_string();
     let auth_header = format!("token {}", token).to_string();
-    let resp = client
+    let response = client
         .post(&url)
         .header(AUTHORIZATION, auth_header)
         .json(&params)
         .send()?;
-    println!("{:?}", resp);
+    println!("{:?}", response);
+    handle_status_code(response.status(), title);
 
     Ok(())
 }
