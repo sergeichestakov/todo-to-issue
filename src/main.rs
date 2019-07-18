@@ -1,35 +1,28 @@
 use std::{
+    collections::HashMap,
     fs::File,
-    io::{self, prelude::*, BufReader, Write},
+    io::{self, prelude::*, BufReader},
     path::Path,
     process::Command,
     str,
 };
+use reqwest::header::AUTHORIZATION;
 
 fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
 
-    let (_username, _password) = get_credentials();
+    let token = get_token();
 
     let files = get_tracked_files();
 
-    read_files(files).unwrap();
+    read_files(files, token).unwrap();
 }
 
-fn get_credentials() -> (String, String) {
-    println!("Please enter your Github credentials.");
-    print!("Username: ");
-    io::stdout().flush().unwrap();
-
-    let mut username = String::new();
-
-    io::stdin().read_line(&mut username)
-        .expect("Failed to read line");
-    let password = rpassword::read_password_from_tty(Some("Password: ")).unwrap();
-
-    (username, password)
+fn get_token() -> String {
+    println!("Please enter your personal access token.");
+    rpassword::read_password_from_tty(Some("Token: ")).unwrap()
 }
 
 fn get_tracked_files() -> Vec<String> {
@@ -101,14 +94,27 @@ fn create_description(line_number: &u32, file_path: &str) -> String {
             line_number, file_path).to_string()
 }
 
-fn open_issue(_client: &reqwest::Client, _remote: &str,
-              _title: &str, _description: &str) ->
+fn open_issue(client: &reqwest::Client, remote: &str,
+              title: &str, description: &str, token: &str) ->
     Result<(), Box<std::error::Error>> {
+    let mut params = HashMap::new();
+    params.insert("title", title);
+    params.insert("body", description);
+
+    // POST /repos/:owner/:repo/issues
+    let url = format!("https://api.github.com/repos/{}/issues", remote).to_string();
+    let auth_header = format!("token {}", token).to_string();
+    let resp = client
+        .post(&url)
+        .header(AUTHORIZATION, auth_header)
+        .json(&params)
+        .send()?;
+    println!("{:?}", resp);
 
     Ok(())
 }
 
-fn read_files(files: Vec<String>) -> io::Result<()> {
+fn read_files(files: Vec<String>, token: String) -> io::Result<()> {
     let client = reqwest::Client::new();
     let remote_repo = get_remote_name();
     for path in files {
@@ -124,7 +130,7 @@ fn read_files(files: Vec<String>) -> io::Result<()> {
                 let title = parse_title(&line);
                 let description = create_description(&line_number, &path);
                 let _result = open_issue(&client, &remote_repo,
-                                           &title, &description);
+                                           &title, &description, &token);
             }
         }
     }
