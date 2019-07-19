@@ -12,17 +12,52 @@ use reqwest::header::AUTHORIZATION;
 const API_ENDPOINT: &str = "https://api.github.com";
 const TODO: &str = "TODO";
 
+struct Request {
+    client: reqwest::Client,
+    url: String,
+    auth_header: String,
+}
+
+impl Request {
+    fn create_issue(&self, params: HashMap<&str, String>) ->
+        Result<(), Box<std::error::Error>> {
+        let response = self.client
+            .post(&self.url)
+            .header(AUTHORIZATION, self.auth_header.clone())
+            .json(&params)
+            .send()?;
+        println!("{:?}", response);
+        let title = params.get("title").unwrap();
+        handle_status_code(response.status(), title);
+
+        Ok(())
+    }
+}
+
+fn build_request() -> Request {
+    let remote = get_remote_name();
+    let token = get_access_token();
+
+    Request {
+        client: reqwest::Client::new(),
+        url: format!("{}/repos/{}/issues", API_ENDPOINT, remote).to_string(),
+        auth_header: format!("token {}", token).to_string(),
+    }
+}
+
+fn build_params<'a>(title: String, description: String) -> HashMap<&'a str, String> {
+    let mut params = HashMap::new();
+    params.insert("title", title);
+    params.insert("body", description);
+    params
+}
+
 fn main() {
     if !Path::new(".git").is_dir() {
         panic!("Must be in a git directory!");
     }
 
-    let token = get_access_token();
-
-    let files = get_tracked_files();
-
-    read_files(files, token)
-        .expect("Failed to read files");
+    read_files().expect("Failed to read files");
 }
 
 fn get_access_token() -> String {
@@ -132,30 +167,10 @@ fn handle_status_code(status: StatusCode, title: &str) {
     };
 }
 
-fn open_issue(client: &reqwest::Client, remote: &str,
-              title: &str, description: &str, token: &str) ->
-    Result<(), Box<std::error::Error>> {
-    let mut params = HashMap::new();
-    params.insert("title", title);
-    params.insert("body", description);
+fn read_files() -> io::Result<()> {
+    let request = build_request();
+    let files = get_tracked_files();
 
-    // POST /repos/:owner/:repo/issues
-    let url = format!("{}/repos/{}/issues", API_ENDPOINT, remote).to_string();
-    let auth_header = format!("token {}", token).to_string();
-    let response = client
-        .post(&url)
-        .header(AUTHORIZATION, auth_header)
-        .json(&params)
-        .send()?;
-    println!("{:?}", response);
-    handle_status_code(response.status(), title);
-
-    Ok(())
-}
-
-fn read_files(files: Vec<String>, token: String) -> io::Result<()> {
-    let client = reqwest::Client::new();
-    let remote_repo = get_remote_name();
     for path in files {
         let file = File::open(&path)?;
         let buffer = BufReader::new(file);
@@ -166,10 +181,12 @@ fn read_files(files: Vec<String>, token: String) -> io::Result<()> {
             line_number += 1;
 
             if contains_todo(&line) {
-                let title = parse_title(&line);
-                let description = create_description(&line_number, &path);
-                let _result = open_issue(&client, &remote_repo,
-                                           &title, &description, &token);
+                let params = build_params(
+                    parse_title(&line),
+                    create_description(&line_number, &path)
+                );
+                let result = request.create_issue(params);
+                println!("{:?}", result);
             }
         }
     }
