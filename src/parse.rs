@@ -2,9 +2,7 @@ use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::str;
 
-use super::parse;
 use super::request;
-
 use request::Request;
 
 const TODO: &str = "TODO";
@@ -18,10 +16,10 @@ pub fn read_file(path: &str, request: &Request) -> io::Result<()> {
         let line = line_option.unwrap();
         line_number += 1;
 
-        if parse::contains_todo(&line) {
+        if contains_todo(&line) {
             let params = Request::build_params(
-                parse::extract_title(&line),
-                parse::create_description(&line_number, path)
+                extract_title(&line),
+                create_description(&line_number, path)
             );
             let result = request.create_issue(params);
             println!("{:?}", result);
@@ -32,6 +30,7 @@ pub fn read_file(path: &str, request: &Request) -> io::Result<()> {
 }
 
 fn contains_todo(line: &str) -> bool {
+    // Look for C and Bash style comments
     let comment = match line.find("//") {
         Some(value) => Some(value),
         None => line.find("#"),
@@ -54,12 +53,16 @@ fn extract_title(line: &str) -> String {
         &after_todo[1..]
     } else {
         after_todo
-    }.trim();
+    }
+    .trim();
 
     String::from(title)
 }
 
 fn create_description(line_number: &u32, file_path: &str) -> String {
-    format!("Found a TODO comment on line {} of file {}",
-            line_number, file_path).to_string()
+    format!(
+        "Found a TODO comment on line {} of file {}",
+        line_number, file_path
+    )
+    .to_string()
 }

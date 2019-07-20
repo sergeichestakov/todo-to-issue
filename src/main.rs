@@ -2,9 +2,9 @@ use std::path::Path;
 
 use request::Request;
 
-mod request;
 mod command;
 mod parse;
+mod request;
 
 fn main() {
     if !Path::new(".git").is_dir() {

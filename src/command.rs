@@ -1,15 +1,19 @@
 use std::process::Command;
 use std::str;
 
-// Reads in a user's personal access token from GitHub.
+/*
+ * Reads in a user's personal access token from GitHub.
+ */
 pub fn read_access_token() -> String {
     println!("Please enter your personal access token.");
     rpassword::read_password_from_tty(Some("Token: "))
         .expect("Failed to read token")
 }
 
-// Executes the command `git remote get-url origin`
-// Parses the result to return a string of the form :username/:repo
+/*
+ * Executes the command `git remote get-url origin`
+ * Parses the result to return a string of the form :username/:repo
+ */
 pub fn get_remote_name() -> String {
     let command = Command::new("git")
         .arg("remote")
@@ -27,8 +31,11 @@ pub fn get_remote_name() -> String {
     String::from(vec[0])
 }
 
-// Executes the command `git ls-tree -r master --name-only`
-// Parses the output to return a vector of file paths that represents all files tracked by git
+/*
+ * Executes the command `git ls-tree -r master --name-only`
+ * Parses the output to return a vector of file paths that represents
+ * all files tracked by git
+ */
 pub fn get_tracked_files() -> Vec<String> {
     let command = Command::new("git")
         .arg("ls-tree")
@@ -40,7 +47,8 @@ pub fn get_tracked_files() -> Vec<String> {
     let output = str::from_utf8(&command.stdout).unwrap();
     let files: Vec<&str> = output.split("\n").collect();
 
-    files.into_iter()
+    files
+        .into_iter()
         .map(|string| String::from(string))
         .filter(|string| !string.is_empty())
         .collect()
