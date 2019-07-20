@@ -1,13 +1,11 @@
-use std::path::Path;
-
-use request::Request;
-
 mod command;
 mod parse;
 mod request;
 
+use request::Request;
+
 fn main() {
-    if !Path::new(".git").is_dir() {
+    if !command::is_git_repo() {
         panic!("Must be in a git directory!");
     }
 
