@@ -20,7 +20,7 @@ pub fn is_git_repo() -> bool {
     let command = Command::new("git")
         .arg("status")
         .output()
-        .expect("Failed to run `git status`");
+        .expect("Failed to execute `git status`");
     let output = str::from_utf8(&command.stdout).unwrap().trim();
 
     !(output == FATAL_GIT_STATUS_MESSAGE)

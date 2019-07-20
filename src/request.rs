@@ -15,6 +15,15 @@ pub struct Request {
     auth_header: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct Response {
+    id: i32,
+    title: String,
+    body: String,
+    number: i32,
+    state: String,
+}
+
 impl Request {
     pub fn new() -> Request {
         let remote = command::get_remote_name();
@@ -28,9 +37,9 @@ impl Request {
         }
     }
 
-    pub fn create_issue(
+    pub fn open_issue(
         &self,
-        params: HashMap<&str, String>,
+        params: HashMap<&str, &str>,
     ) -> Result<(), Box<std::error::Error>> {
         let response = self
             .client
@@ -39,14 +48,20 @@ impl Request {
             .json(&params)
             .send()?;
         println!("{:?}", response);
+
+        Self::assert_successful_response(response.status());
+
         if let Some(title) = params.get("title") {
-            Self::handle_status_code(response.status(), title);
+            println!("Successfully created issue with title: {}", title);
         }
 
         Ok(())
     }
 
-    pub fn get_issues(&self) ->Result<HashSet<String>, Box<std::error::Error>> {
+    pub fn get_issues(
+        &self,
+    ) -> Result<HashSet<String>, Box<std::error::Error>> {
+        // Get all open and closed issues with this label
         let mut params = HashMap::new();
         params.insert("labels", LABEL);
         params.insert("state", "all");
@@ -59,12 +74,12 @@ impl Request {
             .send()?;
         println!("{:?}", response);
 
+        Self::assert_successful_response(response.status());
+
         let mut issues = HashSet::new();
-        if response.status().is_success() {
-            if let Ok(json) = response.json::<Vec<Response>>() {
-                for issue in json {
-                    issues.insert(issue.title);
-                }
+        if let Ok(json) = response.json::<Vec<Response>>() {
+            for issue in json {
+                issues.insert(issue.title);
             }
         }
 
@@ -72,20 +87,18 @@ impl Request {
     }
 
     pub fn build_params<'a>(
-        title: String,
-        description: String,
-    ) -> HashMap<&'a str, String> {
+        title: &'a str,
+        description: &'a str,
+    ) -> HashMap<&'a str, &'a str> {
         let mut params = HashMap::new();
         params.insert("title", title);
         params.insert("body", description);
         return params;
     }
 
-    fn handle_status_code(status: StatusCode, title: &str) {
+    fn assert_successful_response(status: StatusCode) {
         match status {
-            StatusCode::CREATED => {
-                println!("Successfully created issue with title: {}", title);
-            }
+            StatusCode::OK | StatusCode::CREATED => (),
             StatusCode::UNAUTHORIZED => {
                 panic!(
                     "Unathorized request. \
@@ -112,13 +125,4 @@ impl Request {
             s => panic!("Received unexpected status code {}", s),
         };
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct Response {
-    id: i32,
-    title: String,
-    body: String,
-    number: i32,
-    state: String,
 }

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::str;
@@ -7,7 +8,11 @@ use request::Request;
 
 const TODO: &str = "TODO";
 
-pub fn read_file(path: &str, request: &Request) -> io::Result<()> {
+pub fn read_file(
+    path: &str,
+    issues: &HashSet<String>,
+    request: &Request,
+) -> io::Result<()> {
     let file = File::open(path)?;
     let buffer = BufReader::new(file);
 
@@ -17,12 +22,14 @@ pub fn read_file(path: &str, request: &Request) -> io::Result<()> {
         line_number += 1;
 
         if contains_todo(&line) {
-            let params = Request::build_params(
-                extract_title(&line),
-                create_description(&line_number, path),
-            );
-            let result = request.create_issue(params);
-            println!("{:?}", result);
+            let title = extract_title(&line);
+            let description = create_description(&line_number, path);
+
+            if !issues.contains(&title) {
+                let params = Request::build_params(&title, &description);
+                let result = request.open_issue(params);
+                println!("{:?}", result);
+            }
         }
     }
 
