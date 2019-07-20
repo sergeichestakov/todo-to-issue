@@ -19,7 +19,7 @@ pub fn read_file(path: &str, request: &Request) -> io::Result<()> {
         if contains_todo(&line) {
             let params = Request::build_params(
                 extract_title(&line),
-                create_description(&line_number, path)
+                create_description(&line_number, path),
             );
             let result = request.create_issue(params);
             println!("{:?}", result);

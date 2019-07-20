@@ -46,7 +46,7 @@ impl Request {
 
     pub fn build_params<'a>(
         title: String,
-        description: String
+        description: String,
     ) -> HashMap<&'a str, String> {
         let mut params = HashMap::new();
         params.insert("title", title);
