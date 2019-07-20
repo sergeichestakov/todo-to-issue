@@ -1,11 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
+use serde::Deserialize;
 
 use super::command;
 
 const API_ENDPOINT: &str = "https://api.github.com";
+const LABEL: &str = "TODO";
 
 pub struct Request {
     client: reqwest::Client,
@@ -42,6 +44,31 @@ impl Request {
         }
 
         Ok(())
+    }
+
+    pub fn get_issues(&self) ->Result<HashSet<String>, Box<std::error::Error>> {
+        let mut params = HashMap::new();
+        params.insert("labels", LABEL);
+        params.insert("state", "all");
+
+        let mut response = self
+            .client
+            .get(&self.url)
+            .header(AUTHORIZATION, self.auth_header.clone())
+            .query(&params)
+            .send()?;
+        println!("{:?}", response);
+
+        let mut issues = HashSet::new();
+        if response.status().is_success() {
+            if let Ok(json) = response.json::<Vec<Response>>() {
+                for issue in json {
+                    issues.insert(issue.title);
+                }
+            }
+        }
+
+        Ok(issues)
     }
 
     pub fn build_params<'a>(
@@ -85,4 +112,13 @@ impl Request {
             s => panic!("Received unexpected status code {}", s),
         };
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct Response {
+    id: i32,
+    title: String,
+    body: String,
+    number: i32,
+    state: String,
 }
