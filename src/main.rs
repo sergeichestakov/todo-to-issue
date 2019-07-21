@@ -3,6 +3,8 @@ mod issue;
 mod parse;
 mod request;
 
+use std::collections::HashMap;
+
 use request::Request;
 
 fn main() {
@@ -12,12 +14,13 @@ fn main() {
 
     let request = Request::new();
     let files = command::get_tracked_files();
+    let mut file_to_issues = HashMap::new();
 
     let issues = request.get_issues().expect("Failed to get issues");
 
     for path in files {
-        if let Err(e) = parse::read_file(&path, &issues, &request) {
-            println!("Failed to read file {}. Received error {}", path, e);
-        }
+        let result = parse::read_file(&path, &issues, &request);
+        file_to_issues
+            .insert(path.clone(), parse::handle_result(&path, result));
     }
 }

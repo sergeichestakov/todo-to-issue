@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-pub struct Issue<'a> {
-    title: &'a str,
-    body: &'a str,
+pub struct Issue {
+    title: String,
+    body: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -16,22 +16,22 @@ pub struct Response {
     state: String,
 }
 
-impl<'a> Issue<'a> {
-    pub fn new(title: &'a str, body: &'a str) -> Issue<'a> {
+impl Issue {
+    pub fn new(title: String, body: String) -> Issue {
         Issue {
             title: title,
             body: body,
         }
     }
 
-    pub fn get_title(&self) -> &str {
-        self.title
+    pub fn get_title(&self) -> String {
+        self.title.clone()
     }
 
     pub fn to_map(&self) -> HashMap<&str, &str> {
         let mut params = HashMap::new();
-        params.insert("title", self.title);
-        params.insert("body", self.body);
+        params.insert("title", self.title.as_str());
+        params.insert("body", self.body.as_str());
         return params;
     }
 }

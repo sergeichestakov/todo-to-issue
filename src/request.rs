@@ -32,7 +32,7 @@ impl Request {
 
     pub fn open_issue(
         &self,
-        issue: Issue,
+        issue: &Issue,
     ) -> Result<(), Box<std::error::Error>> {
         let params = issue.to_map();
         let response = self
