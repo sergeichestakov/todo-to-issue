@@ -20,7 +20,10 @@ fn main() {
 
     for path in files {
         let result = parse::read_file(&path, &issues, &request);
-        file_to_issues
-            .insert(path.clone(), parse::handle_result(&path, result));
+        if let Ok(vector) = result {
+            file_to_issues.insert(path.clone(), vector);
+        }
     }
+
+    let _total = parse::count_issues(&file_to_issues);
 }

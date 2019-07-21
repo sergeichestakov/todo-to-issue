@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::str;
@@ -44,23 +44,16 @@ pub fn read_file(
     Ok(issues_in_file)
 }
 
-pub fn handle_result(
-    file_path: &str,
-    result: io::Result<(Vec<Issue>)>,
-) -> Vec<Issue> {
-    //! Outputs the result of "read_files" and returns a vector of Issues
-    //! or an empty vector if the IO result failed.
-    match result {
-        Ok(vector) => {
-            let number_of_issues = vector.len();
-            println!("Found {} issues in file {}", number_of_issues, file_path);
-            return vector;
-        }
-        Err(e) => {
-            println!("Failed to read file {}. Received error {}", file_path, e);
-            return Vec::new();
-        }
-    };
+pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
+    let mut total = 0;
+    for (file, issues) in map {
+        let num_issues = issues.len();
+        println!("Found {} issues in file {}", num_issues, file);
+        total += num_issues;
+    }
+
+    println!("Found {} issues total.", total);
+    return total;
 }
 
 fn contains_todo(line: &str) -> bool {
