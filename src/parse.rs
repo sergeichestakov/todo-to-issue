@@ -3,7 +3,9 @@ use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::str;
 
+use super::issue;
 use super::request;
+use issue::Issue;
 use request::Request;
 
 const TODO: &str = "TODO";
@@ -23,11 +25,11 @@ pub fn read_file(
 
         if contains_todo(&line) {
             let title = extract_title(&line);
-            let description = create_description(&line_number, path);
+            let body = create_body(&line_number, path);
 
-            if !issues.contains(&title) {
-                let params = Request::build_params(&title, &description);
-                let result = request.open_issue(params);
+            if !issues.contains(title.as_str()) {
+                let issue = Issue::new(&title, &body);
+                let result = request.open_issue(issue);
                 println!("{:?}", result);
             }
         }
@@ -63,10 +65,10 @@ fn extract_title(line: &str) -> String {
     }
     .trim();
 
-    String::from(title)
+    title.to_string()
 }
 
-fn create_description(line_number: &u32, file_path: &str) -> String {
+fn create_body(line_number: &u32, file_path: &str) -> String {
     format!(
         "Found a TODO comment on line {} of file {}",
         line_number, file_path

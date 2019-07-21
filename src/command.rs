@@ -23,7 +23,7 @@ pub fn is_git_repo() -> bool {
         .expect("Failed to execute `git status`");
     let output = str::from_utf8(&command.stdout).unwrap().trim();
 
-    !(output == FATAL_GIT_STATUS_MESSAGE)
+    output != FATAL_GIT_STATUS_MESSAGE
 }
 
 /*
@@ -41,10 +41,10 @@ pub fn get_remote_name() -> String {
     // Output is of the form https://github.com/:username/:repo.git
     // So we must remove the protocol and domain as well as the .git suffix
     let split: Vec<&str> = output.split("github.com/").collect();
-    let remote = String::from(split[1]);
+    let remote = split[1].to_string();
     let vec: Vec<&str> = remote.split(".git").collect();
 
-    String::from(vec[0])
+    vec[0].to_string()
 }
 
 /*
@@ -65,7 +65,7 @@ pub fn get_tracked_files() -> Vec<String> {
 
     files
         .into_iter()
-        .map(|string| String::from(string))
+        .map(|string| string.to_string())
         .filter(|string| !string.is_empty())
         .collect()
 }

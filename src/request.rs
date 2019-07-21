@@ -2,9 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
-use serde::Deserialize;
+
+use issue::Issue;
 
 use super::command;
+use super::issue;
 
 const API_ENDPOINT: &str = "https://api.github.com";
 const LABEL: &str = "TODO";
@@ -13,15 +15,6 @@ pub struct Request {
     client: reqwest::Client,
     url: String,
     auth_header: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Response {
-    id: i32,
-    title: String,
-    body: String,
-    number: i32,
-    state: String,
 }
 
 impl Request {
@@ -39,8 +32,9 @@ impl Request {
 
     pub fn open_issue(
         &self,
-        params: HashMap<&str, &str>,
+        issue: Issue,
     ) -> Result<(), Box<std::error::Error>> {
+        let params = issue.to_map();
         let response = self
             .client
             .post(&self.url)
@@ -51,9 +45,10 @@ impl Request {
 
         Self::assert_successful_response(response.status());
 
-        if let Some(title) = params.get("title") {
-            println!("Successfully created issue with title: {}", title);
-        }
+        println!(
+            "Successfully created issue with title: {}",
+            issue.get_title()
+        );
 
         Ok(())
     }
@@ -77,23 +72,13 @@ impl Request {
         Self::assert_successful_response(response.status());
 
         let mut issues = HashSet::new();
-        if let Ok(json) = response.json::<Vec<Response>>() {
-            for issue in json {
-                issues.insert(issue.title);
+        if let Ok(json_array) = response.json::<Vec<issue::Response>>() {
+            for result in json_array {
+                issues.insert(result.get_title());
             }
         }
 
         Ok(issues)
-    }
-
-    pub fn build_params<'a>(
-        title: &'a str,
-        description: &'a str,
-    ) -> HashMap<&'a str, &'a str> {
-        let mut params = HashMap::new();
-        params.insert("title", title);
-        params.insert("body", description);
-        return params;
     }
 
     fn assert_successful_response(status: StatusCode) {
