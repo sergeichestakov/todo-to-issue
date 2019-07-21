@@ -4,19 +4,15 @@ use std::str;
 const FATAL_GIT_STATUS_MESSAGE: &str =
     "fatal: not a git repository (or any of the parent directories): .git";
 
-/*
- * Reads in a user's personal access token from GitHub.
- */
 pub fn read_access_token() -> String {
+    //! Reads in a user's personal access token from GitHub.
     println!("Please enter your personal access token.");
     rpassword::read_password_from_tty(Some("Token: "))
         .expect("Failed to read token")
 }
 
-/*
- * Returns whether the current repo is a git repository.
- */
 pub fn is_git_repo() -> bool {
+    //! Returns whether the current repo is a git repository.
     let command = Command::new("git")
         .arg("status")
         .output()
@@ -26,11 +22,9 @@ pub fn is_git_repo() -> bool {
     output != FATAL_GIT_STATUS_MESSAGE
 }
 
-/*
- * Executes the command `git remote get-url origin`
- * Parses the result to return a string of the form :username/:repo
- */
 pub fn get_remote_name() -> String {
+    //! Executes the command `git remote get-url origin`.
+    //! Parses the result to return a string of the form :username/:repo.
     let command = Command::new("git")
         .arg("remote")
         .arg("get-url")
@@ -39,7 +33,7 @@ pub fn get_remote_name() -> String {
         .expect("Failed to execute `git remote get-url origin`");
     let output = str::from_utf8(&command.stdout).unwrap();
     // Output is of the form https://github.com/:username/:repo.git
-    // So we must remove the protocol and domain as well as the .git suffix
+    // So we must remove the protocol/domain and .git suffix.
     let split: Vec<&str> = output.split("github.com/").collect();
     let remote = split[1].to_string();
     let vec: Vec<&str> = remote.split(".git").collect();
@@ -47,12 +41,10 @@ pub fn get_remote_name() -> String {
     vec[0].to_string()
 }
 
-/*
- * Executes the command `git ls-tree -r master --name-only`
- * Parses the output to return a vector of file paths that represents
- * all files tracked by git
- */
 pub fn get_tracked_files() -> Vec<String> {
+    //! Executes the command `git ls-tree -r master --name-only`.
+    //! Parses the output to return a vector of file paths that represents
+    //! all files tracked by git.
     let command = Command::new("git")
         .arg("ls-tree")
         .arg("-r")

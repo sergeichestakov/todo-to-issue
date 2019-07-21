@@ -15,6 +15,10 @@ pub fn read_file(
     prev_issues: &HashSet<String>,
     request: &Request,
 ) -> io::Result<(Vec<Issue>)> {
+    //! Reads every line in a file for a "todo" comment, creating an Issue
+    //! object for each one with the parsed title and description.
+    //!
+    //! Returns an IO result containing a vector of Issues if successful.
     let file = File::open(path)?;
     let buffer = BufReader::new(file);
     let mut issues_in_file = Vec::new();
@@ -42,8 +46,10 @@ pub fn read_file(
 
 pub fn handle_result(
     file_path: &str,
-    result: io::Result<(Vec<Issue>)>
+    result: io::Result<(Vec<Issue>)>,
 ) -> Vec<Issue> {
+    //! Outputs the result of "read_files" and returns a vector of Issues
+    //! or an empty vector if the IO result failed.
     match result {
         Ok(vector) => {
             let number_of_issues = vector.len();
@@ -58,7 +64,8 @@ pub fn handle_result(
 }
 
 fn contains_todo(line: &str) -> bool {
-    // Look for C and Bash style comments
+    //! Returns if a line contains a todo comment.
+    //! Looks for both C and Bash style comments.
     let comment = match line.find("//") {
         Some(value) => Some(value),
         None => line.find("#"),
@@ -75,6 +82,9 @@ fn contains_todo(line: &str) -> bool {
 }
 
 fn extract_title(line: &str) -> String {
+    //! Parses a line containing a todo comment and returns the
+    //! remainder of the String after "todo" to be used as the title of a
+    //! new GitHub issue.
     let vec: Vec<&str> = line.split(TODO).collect();
     let after_todo = vec[1];
     let title = if after_todo.starts_with(":") {
@@ -88,6 +98,8 @@ fn extract_title(line: &str) -> String {
 }
 
 fn create_body(line_number: &u32, file_path: &str) -> String {
+    //! Creates a generic description for a new GitHub issue
+    //! based on a "todo" comment.
     format!(
         "Found a TODO comment on line {} of file {}",
         line_number, file_path

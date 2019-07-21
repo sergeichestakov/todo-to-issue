@@ -19,6 +19,9 @@ pub struct Request {
 
 impl Request {
     pub fn new() -> Request {
+        //! Creates a new request object containing the http client,
+        //! url formatted with the API endpoint and user's remote repo,
+        //! and auth header containing the user's token.
         let remote = command::get_remote_name();
         let token = command::read_access_token();
 
@@ -34,6 +37,10 @@ impl Request {
         &self,
         issue: &Issue,
     ) -> Result<(), Box<std::error::Error>> {
+        //! Makes a POST request to create a new issue with
+        //! the inputted params (title and description).
+        //!
+        //! Panics if the response is not 201 Created or the request fails.
         let params = issue.to_map();
         let response = self
             .client
@@ -56,7 +63,11 @@ impl Request {
     pub fn get_issues(
         &self,
     ) -> Result<HashSet<String>, Box<std::error::Error>> {
-        // Get all open and closed issues with this label
+        //! Makes a GET request to retrieve all issues (open and closed)
+        //! with the label "TODO" in the remote repository.
+        //!
+        //! Returns a hashset of the issue titles. Panics if the response
+        //! is not 200 OK or the request fails.
         let mut params = HashMap::new();
         params.insert("labels", LABEL);
         params.insert("state", "all");
@@ -82,6 +93,10 @@ impl Request {
     }
 
     fn assert_successful_response(status: StatusCode) {
+        //! Asserts that the status code returned is either
+        //! 200 OK or 201 CREATED.
+        //!
+        //! Otherwise, panics with a detailed description.
         match status {
             StatusCode::OK | StatusCode::CREATED => (),
             StatusCode::UNAUTHORIZED => {
