@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+pub const LABEL: &str = "TODO";
+
 pub struct Issue {
     title: String,
     body: String,
@@ -32,6 +34,7 @@ impl Issue {
         let mut params = HashMap::new();
         params.insert("title", self.title.as_str());
         params.insert("body", self.body.as_str());
+        params.insert("labels", LABEL);
         return params;
     }
 }

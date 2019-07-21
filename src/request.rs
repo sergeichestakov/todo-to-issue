@@ -9,7 +9,6 @@ use super::command;
 use super::issue;
 
 const API_ENDPOINT: &str = "https://api.github.com";
-const LABEL: &str = "TODO";
 
 pub struct Request {
     client: reqwest::Client,
@@ -64,12 +63,12 @@ impl Request {
         &self,
     ) -> Result<HashSet<String>, Box<std::error::Error>> {
         //! Makes a GET request to retrieve all issues (open and closed)
-        //! with the label "TODO" in the remote repository.
+        //! with a todo label in the remote repository.
         //!
         //! Returns a hashset of the issue titles. Panics if the response
         //! is not 200 OK or the request fails.
         let mut params = HashMap::new();
-        params.insert("labels", LABEL);
+        params.insert("labels", issue::LABEL);
         params.insert("state", "all");
 
         let mut response = self
