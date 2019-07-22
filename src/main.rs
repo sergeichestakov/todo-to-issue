@@ -1,3 +1,4 @@
+mod cli;
 mod command;
 mod issue;
 mod parse;
@@ -8,9 +9,7 @@ use std::collections::HashMap;
 use request::Request;
 
 fn main() {
-    if !command::is_git_repo() {
-        panic!("Must be in a git directory!");
-    }
+    cli::init();
 
     let request = Request::new();
     let files = command::get_tracked_files();
