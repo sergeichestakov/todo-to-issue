@@ -3,8 +3,7 @@ use std::str;
 
 use dialoguer::PasswordInput;
 
-const FATAL_GIT_STATUS_MESSAGE: &str =
-    "fatal: not a git repository (or any of the parent directories): .git";
+const FATAL_GIT_STATUS_PREFIX: &str = "fatal:";
 
 pub fn read_access_token() -> String {
     //! Reads in a user's personal access token from GitHub.
@@ -23,7 +22,7 @@ pub fn is_git_repo() -> bool {
         .expect("Failed to execute `git status`");
     let output = str::from_utf8(&command.stdout).unwrap().trim();
 
-    output != FATAL_GIT_STATUS_MESSAGE
+    !output.starts_with(FATAL_GIT_STATUS_PREFIX)
 }
 
 pub fn get_remote_name() -> String {
