@@ -10,16 +10,15 @@ use request::Request;
 
 fn main() {
     let args = cli::init();
-    let directory = args.get_directory();
 
     let request = Request::new(args.get_token());
     let files = command::get_tracked_files();
-    let mut file_to_issues = HashMap::new();
-
     let issues = request.get_issues().expect("Failed to get issues");
 
+    let pattern = args.get_pattern();
+    let mut file_to_issues = HashMap::new();
     for path in files {
-        if path.starts_with(&directory) {
+        if pattern.matches(&path) {
             let result = parse::find_issues(&path, &issues);
             if let Ok(vector) = result {
                 file_to_issues.insert(path.clone(), vector);

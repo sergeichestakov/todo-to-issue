@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use clap::{App, Arg};
 use dialoguer::{theme::ColorfulTheme, Confirmation, Editor, Select};
+use glob::Pattern;
 
 use super::command;
 use super::issue;
@@ -10,13 +11,14 @@ use super::request;
 use issue::Issue;
 use request::Request;
 
+const ALL_FILES: &str = "*";
 const OPEN: usize = 0;
 const EDIT: usize = 1;
 const SKIP: usize = 2;
 const EXIT: usize = 3;
 
 pub struct Args {
-    directory: String,
+    pattern: Pattern,
     token: String,
 }
 
@@ -25,8 +27,8 @@ impl Args {
         self.token.clone()
     }
 
-    pub fn get_directory(&self) -> String {
-        self.directory.clone()
+    pub fn get_pattern(&self) -> &Pattern {
+        &self.pattern
     }
 }
 
@@ -40,10 +42,12 @@ pub fn init() -> Args {
         .author("Sergei Chestakov <sergei332@gmail.com>")
         .about("Converts TODO comments to GitHub issues")
         .arg(
-            Arg::with_name("DIRECTORY")
-                .help("Sets which directory to look through")
-                .required(false)
-                .index(1),
+            Arg::with_name("pattern")
+                .short("p")
+                .long("pattern")
+                .value_name("PATTERN")
+                .help("Sets a glob pattern to narrow search for TODO comments")
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("token")
@@ -55,26 +59,19 @@ pub fn init() -> Args {
         )
         .get_matches();
 
-    let directory_value =
-        matches.value_of("DIRECTORY").unwrap_or("").to_string();
-    let directory = if directory_value.starts_with("../") {
-        println!("Cannot search parent dirs. Defaulting to current directory.");
-        ""
-    } else if directory_value.starts_with("./") {
-        &directory_value[2..]
-    } else {
-        &directory_value
-    }
-    .to_string();
+    let pattern_value = matches.value_of("pattern").unwrap_or(ALL_FILES);
 
-    let token_value = matches.value_of("token").unwrap_or("");
-    let token = if token_value.is_empty() {
-        command::read_access_token()
-    } else {
-        token_value.to_string()
+    let pattern = match Pattern::new(pattern_value) {
+        Ok(pattern) => pattern,
+        Err(_) => Pattern::new(ALL_FILES).unwrap(),
     };
 
-    Args { directory, token }
+    let token = match matches.value_of("token") {
+        Some(t) => t.to_string(),
+        None => command::read_access_token(),
+    };
+
+    Args { pattern, token }
 }
 
 pub fn output_and_send_issues(
