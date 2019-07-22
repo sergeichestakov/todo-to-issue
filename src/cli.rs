@@ -55,20 +55,26 @@ pub fn init() -> Args {
         )
         .get_matches();
 
-    let token = matches.value_of("token").unwrap_or("");
+    let directory_value =
+        matches.value_of("DIRECTORY").unwrap_or("").to_string();
+    let directory = if directory_value.starts_with("../") {
+        println!("Cannot search parent dirs. Defaulting to current directory.");
+        ""
+    } else if directory_value.starts_with("./") {
+        &directory_value[2..]
+    } else {
+        &directory_value
+    }
+    .to_string();
 
-    let directory = matches.value_of("DIRECTORY").unwrap_or("./").to_string();
-
-    let access_token = if token.is_empty() {
+    let token_value = matches.value_of("token").unwrap_or("");
+    let token = if token_value.is_empty() {
         command::read_access_token()
     } else {
-        token.to_string()
+        token_value.to_string()
     };
 
-    Args {
-        token: access_token,
-        directory: directory,
-    }
+    Args { directory, token }
 }
 
 pub fn output_and_send_issues(
