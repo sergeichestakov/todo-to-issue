@@ -69,10 +69,6 @@ impl Issue {
         self.title.clone()
     }
 
-    pub fn get_body(&self) -> String {
-        self.body.clone()
-    }
-
     pub fn to_string(&self) -> String {
         format!(
             "{} {}\n{} {}",
