@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 pub const LABEL: &str = "TODO";
-const TITLE_PREFIX: &str = "Title: ";
-const BODY_PREFIX: &str = "Body: ";
+const TITLE_PREFIX: &str = "Title:";
+const BODY_PREFIX: &str = "Body:";
 
 pub struct Issue {
     title: String,
@@ -13,10 +13,10 @@ pub struct Issue {
 
 #[derive(Debug, Deserialize)]
 pub struct Response {
-    id: i32,
+    id: u32,
     title: String,
     body: String,
-    number: i32,
+    number: u32,
     state: String,
 }
 
