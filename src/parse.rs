@@ -8,7 +8,40 @@ use issue::Issue;
 
 const TODO: &str = "TODO";
 
-pub fn find_issues(
+pub fn populate_map(
+    files: &Vec<String>,
+    issues: &HashSet<String>,
+    pattern: &glob::Pattern,
+) -> HashMap<String, Vec<Issue>> {
+    let mut file_to_issues = HashMap::new();
+
+    for path in files {
+        if pattern.matches(&path) {
+            let result = find_issues(&path, &issues);
+            if let Ok(vector) = result {
+                file_to_issues.insert(path.clone(), vector);
+            }
+        }
+    }
+
+    file_to_issues
+}
+
+pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
+    let mut total = 0;
+    for (file, issues) in map {
+        let num_issues = issues.len();
+        if num_issues > 0 {
+            println!("Found {} issues in file {}", num_issues, file);
+            total += num_issues;
+        }
+    }
+
+    println!("Found {} issues total.", total);
+    return total;
+}
+
+fn find_issues(
     path: &str,
     prev_issues: &HashSet<String>,
 ) -> io::Result<(Vec<Issue>)> {
@@ -37,20 +70,6 @@ pub fn find_issues(
     }
 
     Ok(issues_in_file)
-}
-
-pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
-    let mut total = 0;
-    for (file, issues) in map {
-        let num_issues = issues.len();
-        if num_issues > 0 {
-            println!("Found {} issues in file {}", num_issues, file);
-            total += num_issues;
-        }
-    }
-
-    println!("Found {} issues total.", total);
-    return total;
 }
 
 fn contains_todo(line: &str) -> bool {
