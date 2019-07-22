@@ -4,16 +4,13 @@ use std::io::{self, prelude::*, BufReader};
 use std::str;
 
 use super::issue;
-use super::request;
 use issue::Issue;
-use request::Request;
 
 const TODO: &str = "TODO";
 
-pub fn read_file(
+pub fn find_issues(
     path: &str,
     prev_issues: &HashSet<String>,
-    request: &Request,
 ) -> io::Result<(Vec<Issue>)> {
     //! Reads every line in a file for a "todo" comment, creating an Issue
     //! object for each one with the parsed title and description.
@@ -34,9 +31,7 @@ pub fn read_file(
 
             if !prev_issues.contains(title.as_str()) {
                 let issue = Issue::new(title, body);
-                let result = request.open_issue(&issue);
                 issues_in_file.push(issue);
-                println!("{:?}", result);
             }
         }
     }

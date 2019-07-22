@@ -19,7 +19,7 @@ fn main() {
     let issues = request.get_issues().expect("Failed to get issues");
 
     for path in files {
-        let result = parse::read_file(&path, &issues, &request);
+        let result = parse::find_issues(&path, &issues);
         if let Ok(vector) = result {
             file_to_issues.insert(path.clone(), vector);
         }
@@ -27,5 +27,5 @@ fn main() {
 
     let _total = parse::count_issues(&file_to_issues);
 
-    cli::prompt_to_continue();
+    if cli::prompt_to_continue() {}
 }
