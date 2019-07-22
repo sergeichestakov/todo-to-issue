@@ -43,8 +43,10 @@ pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
     let mut total = 0;
     for (file, issues) in map {
         let num_issues = issues.len();
-        println!("Found {} issues in file {}", num_issues, file);
-        total += num_issues;
+        if num_issues > 0 {
+            println!("Found {} issues in file {}", num_issues, file);
+            total += num_issues;
+        }
     }
 
     println!("Found {} issues total.", total);

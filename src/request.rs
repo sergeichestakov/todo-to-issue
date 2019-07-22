@@ -46,7 +46,6 @@ impl Request {
             .header(AUTHORIZATION, self.auth_header.clone())
             .json(&params)
             .send()?;
-        println!("{:?}", response);
 
         Self::assert_successful_response(response.status());
 
@@ -70,13 +69,13 @@ impl Request {
         params.insert("labels", issue::LABEL);
         params.insert("state", "all");
 
+        println!("Fetching all issues with TODO label...");
         let mut response = self
             .client
             .get(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
             .query(&params)
             .send()?;
-        println!("{:?}", response);
 
         Self::assert_successful_response(response.status());
 
@@ -87,6 +86,7 @@ impl Request {
             }
         }
 
+        println!("Found {} previously opened issues.", issues.len());
         Ok(issues)
     }
 
