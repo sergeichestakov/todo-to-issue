@@ -90,8 +90,8 @@ pub fn output_and_send_issues(
                 .unwrap();
 
             match selection {
-                OPEN => println!("OPENING"),
-                EDIT => edit_issue(&issue),
+                OPEN => open_issue(&request, &issue),
+                EDIT => edit_and_open_issue(&request, &issue),
                 SKIP => continue,
                 EXIT => return,
                 _ => (),
@@ -107,17 +107,35 @@ pub fn prompt_to_continue() -> bool {
         .expect("Failed to read confirmation")
 }
 
-fn edit_issue(issue: &Issue) {
+fn open_issue(request: &Request, issue: &Issue) {
+    match request.open_issue(issue) {
+        Ok(()) => println!(
+            "Successfully created issue with title: {}",
+            issue.get_title()
+        ),
+        Err(e) => println!(
+            "Failed to open issue {}. Received error {}",
+            issue.get_title(),
+            e
+        ),
+    }
+}
+
+fn edit_and_open_issue(request: &Request, issue: &Issue) {
+    match edit_issue(issue) {
+        Some(issue) => open_issue(request, &issue),
+        None => println!(
+            "Failed to create issue. Please check format and try again."
+        ),
+    }
+}
+
+fn edit_issue(issue: &Issue) -> Option<Issue> {
     let result = Editor::new().edit(&issue.to_string()).unwrap();
 
     if let Some(input) = result {
-        match Issue::from_string(input) {
-            Some(issue) => println!("Created issue:\n{}", issue.to_string()),
-            None => println!(
-                "Failed to create issue. Please review format and try again."
-            ),
-        }
+        return Issue::from_string(input);
     } else {
-        println!("Abort!");
+        return None;
     }
 }

@@ -22,10 +22,7 @@ pub struct Response {
 
 impl Issue {
     pub fn new(title: String, body: String) -> Issue {
-        Issue {
-            title: title,
-            body: body,
-        }
+        Issue { title, body }
     }
 
     pub fn from_string(string: String) -> Option<Issue> {

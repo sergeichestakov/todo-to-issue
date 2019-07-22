@@ -49,11 +49,6 @@ impl Request {
 
         Self::assert_successful_response(response.status());
 
-        println!(
-            "Successfully created issue with title: {}",
-            issue.get_title()
-        );
-
         Ok(())
     }
 
