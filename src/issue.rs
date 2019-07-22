@@ -30,6 +30,10 @@ impl Issue {
         self.title.clone()
     }
 
+    pub fn get_body(&self) -> String {
+        self.body.clone()
+    }
+
     pub fn to_map(&self) -> HashMap<&str, &str> {
         let mut params = HashMap::new();
         params.insert("title", self.title.as_str());
