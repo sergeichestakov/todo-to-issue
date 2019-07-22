@@ -27,5 +27,7 @@ fn main() {
 
     let _total = parse::count_issues(&file_to_issues);
 
-    if cli::prompt_to_continue() {}
+    if cli::prompt_to_continue() {
+        cli::output_and_send_issues(&request, &file_to_issues);
+    }
 }

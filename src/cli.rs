@@ -1,7 +1,19 @@
+use std::collections::HashMap;
+
 use clap::{App, Arg};
-use dialoguer::Confirmation;
+use dialoguer::{theme::ColorfulTheme, Confirmation, Select};
 
 use super::command;
+use super::issue;
+use super::request;
+
+use issue::Issue;
+use request::Request;
+
+const OPEN: usize = 0;
+const EDIT: usize = 1;
+const SKIP: usize = 2;
+const EXIT: usize = 3;
 
 pub struct Args {
     directory: String,
@@ -56,6 +68,36 @@ pub fn init() -> Args {
     Args {
         token: access_token,
         directory: directory,
+    }
+}
+
+pub fn output_and_send_issues(
+    request: &Request,
+    map: &HashMap<String, Vec<Issue>>,
+) {
+    let selections = &["Open Issue", "Edit Issue", "Skip", "Exit"];
+
+    for (file, issues) in map {
+        for issue in issues {
+            println!("Found issue in file {}:", &file);
+            println!("Title: \"{}\" ", issue.get_title());
+            println!("Body: \"{}\" ", issue.get_body());
+
+            let selection = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt("What would you like to do?")
+                .default(0)
+                .items(&selections[..])
+                .interact()
+                .unwrap();
+
+            match selection {
+                OPEN => println!("OPENING"),
+                EDIT => println!("EDITING"),
+                SKIP => println!("SKIPPING"),
+                EXIT => println!("EXITING"),
+                _ => (),
+            }
+        }
     }
 }
 
