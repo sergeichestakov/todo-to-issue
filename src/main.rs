@@ -9,9 +9,10 @@ use std::collections::HashMap;
 use request::Request;
 
 fn main() {
-    cli::init();
+    let args = cli::init();
+    let _directory = args.get_directory();
 
-    let request = Request::new();
+    let request = Request::new(args.get_token());
     let files = command::get_tracked_files();
     let mut file_to_issues = HashMap::new();
 

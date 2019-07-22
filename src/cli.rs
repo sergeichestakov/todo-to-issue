@@ -3,12 +3,27 @@ use dialoguer::Confirmation;
 
 use super::command;
 
-pub fn init() {
+pub struct Args {
+    directory: String,
+    token: String,
+}
+
+impl Args {
+    pub fn get_token(&self) -> String {
+        self.token.clone()
+    }
+
+    pub fn get_directory(&self) -> String {
+        self.directory.clone()
+    }
+}
+
+pub fn init() -> Args {
     if !command::is_git_repo() {
         panic!("Must be in a git directory!");
     }
 
-    let _matches = App::new("todo-to-issue")
+    let matches = App::new("todo-to-issue")
         .version("0.1")
         .author("Sergei Chestakov <sergei332@gmail.com>")
         .about("Converts TODO comments to GitHub issues")
@@ -27,6 +42,21 @@ pub fn init() {
                 .takes_value(true),
         )
         .get_matches();
+
+    let token = matches.value_of("token").unwrap_or("");
+
+    let directory = matches.value_of("DIRECTORY").unwrap_or("./").to_string();
+
+    let access_token = if token.is_empty() {
+        command::read_access_token()
+    } else {
+        token.to_string()
+    };
+
+    Args {
+        token: access_token,
+        directory: directory,
+    }
 }
 
 pub fn prompt_to_continue() -> bool {

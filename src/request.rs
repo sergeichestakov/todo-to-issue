@@ -17,12 +17,11 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new() -> Request {
+    pub fn new(token: String) -> Request {
         //! Creates a new request object containing the http client,
         //! url formatted with the API endpoint and user's remote repo,
         //! and auth header containing the user's token.
         let remote = command::get_remote_name();
-        let token = command::read_access_token();
 
         Request {
             client: reqwest::Client::new(),
