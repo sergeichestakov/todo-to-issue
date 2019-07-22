@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use dialoguer::Confirmation;
 
 use super::command;
 
@@ -7,7 +8,7 @@ pub fn init() {
         panic!("Must be in a git directory!");
     }
 
-    let matches = App::new("todo-to-issue")
+    let _matches = App::new("todo-to-issue")
         .version("0.1")
         .author("Sergei Chestakov <sergei332@gmail.com>")
         .about("Converts TODO comments to GitHub issues")
@@ -26,8 +27,11 @@ pub fn init() {
                 .takes_value(true),
         )
         .get_matches();
+}
 
-        if let Some(token) = matches.value_of("token") {
-            println!("Received token {}", token);
-        }
+pub fn prompt_to_continue() -> bool {
+    Confirmation::new()
+        .with_text("Do you want to continue?")
+        .interact()
+        .expect("Failed to read confirmation")
 }

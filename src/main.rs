@@ -25,4 +25,6 @@ fn main() {
     }
 
     let _total = parse::count_issues(&file_to_issues);
+
+    cli::prompt_to_continue();
 }
