@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use clap::{App, Arg};
-use dialoguer::{theme::ColorfulTheme, Confirmation, Select};
+use dialoguer::{theme::ColorfulTheme, Confirmation, Editor, Select};
 
 use super::command;
 use super::issue;
@@ -80,8 +80,7 @@ pub fn output_and_send_issues(
     for (file, issues) in map {
         for issue in issues {
             println!("Found issue in file {}:", &file);
-            println!("Title: \"{}\" ", issue.get_title());
-            println!("Body: \"{}\" ", issue.get_body());
+            println!("{}", &issue.to_string());
 
             let selection = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("What would you like to do?")
@@ -92,9 +91,9 @@ pub fn output_and_send_issues(
 
             match selection {
                 OPEN => println!("OPENING"),
-                EDIT => println!("EDITING"),
-                SKIP => println!("SKIPPING"),
-                EXIT => println!("EXITING"),
+                EDIT => edit_issue(&issue),
+                SKIP => continue,
+                EXIT => return,
                 _ => (),
             }
         }
@@ -106,4 +105,19 @@ pub fn prompt_to_continue() -> bool {
         .with_text("Do you want to continue?")
         .interact()
         .expect("Failed to read confirmation")
+}
+
+fn edit_issue(issue: &Issue) {
+    let result = Editor::new().edit(&issue.to_string()).unwrap();
+
+    if let Some(input) = result {
+        match Issue::from_string(input) {
+            Some(issue) => println!("Created issue:\n{}", issue.to_string()),
+            None => println!(
+                "Failed to create issue. Please review format and try again."
+            ),
+        }
+    } else {
+        println!("Abort!");
+    }
 }
