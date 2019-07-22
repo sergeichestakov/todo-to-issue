@@ -1,13 +1,17 @@
 use std::process::Command;
 use std::str;
 
+use dialoguer::PasswordInput;
+
 const FATAL_GIT_STATUS_MESSAGE: &str =
     "fatal: not a git repository (or any of the parent directories): .git";
 
 pub fn read_access_token() -> String {
     //! Reads in a user's personal access token from GitHub.
     println!("Please enter your personal access token.");
-    rpassword::read_password_from_tty(Some("Token: "))
+    PasswordInput::new()
+        .with_prompt("Token")
+        .interact()
         .expect("Failed to read token")
 }
 
