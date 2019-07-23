@@ -45,13 +45,14 @@ pub fn get_remote_name() -> String {
 }
 
 pub fn get_tracked_files() -> Vec<String> {
-    //! Executes the command `git ls-tree -r master --name-only`.
+    //! Executes the command `git ls-tree -r {branch} --name-only`.
     //! Parses the output to return a vector of file paths that represents
     //! all files tracked by git.
+    let branch = get_branch_name();
     let command = Command::new("git")
         .arg("ls-tree")
         .arg("-r")
-        .arg("master")
+        .arg(branch)
         .arg("--name-only")
         .output()
         .expect("Failed to execute `git ls-tree -r master --name-only`");
@@ -63,4 +64,18 @@ pub fn get_tracked_files() -> Vec<String> {
         .map(|string| string.to_string())
         .filter(|string| !string.is_empty())
         .collect()
+}
+
+fn get_branch_name() -> String {
+    //! Executes the command `git rev-parse --abbrev-ref HEAD`.
+    //! Returns the output which represents the current branch the user is on.
+    let command = Command::new("git")
+        .arg("rev-parse")
+        .arg("--abbrev-ref")
+        .arg("HEAD")
+        .output()
+        .expect("Failed to execute `git rev-parse --abbrev-ref HEAD`");
+    let output = str::from_utf8(&command.stdout).unwrap();
+
+    output.trim().to_string()
 }
