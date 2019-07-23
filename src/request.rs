@@ -89,11 +89,15 @@ impl Request {
             }
         }
 
-        println!(
-            "Found {} previously opened {}.",
-            style(issues.len()).bold(),
-            parse::handle_plural(&issues.len(), "issue")
-        );
+        match issues.len() {
+            0 => println!("No previously opened issues found."),
+            n => println!(
+                "Found {} previously opened {}.",
+                style(n).bold(),
+                parse::handle_plural(&n, "issue")
+            ),
+        };
+
         Ok(issues)
     }
 
