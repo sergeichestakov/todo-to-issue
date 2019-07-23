@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use clap::{App, Arg};
 use console::style;
-use dialoguer::{theme::ColorfulTheme, Confirmation, Editor, Select};
+use dialoguer::{theme::ColorfulTheme, Editor, Select};
 use glob::Pattern;
 
 use super::command;
@@ -23,6 +23,7 @@ const EXIT: usize = 3;
 pub struct Args {
     pattern: Pattern,
     token: String,
+    is_dry_run: bool,
 }
 
 impl Args {
@@ -32,6 +33,10 @@ impl Args {
 
     pub fn get_pattern(&self) -> &Pattern {
         &self.pattern
+    }
+
+    pub fn is_dry_run(&self) -> bool {
+        self.is_dry_run
     }
 }
 
@@ -60,6 +65,12 @@ pub fn init() -> Args {
                 .help("Sets the token for user")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("dry-run")
+                .short("n")
+                .long("dry-run")
+                .help("Output the number of TODOs without opening any issues"),
+        )
         .get_matches();
 
     let pattern_value = matches.value_of("pattern").unwrap_or(ALL_FILES);
@@ -74,7 +85,13 @@ pub fn init() -> Args {
         None => command::read_access_token(),
     };
 
-    Args { pattern, token }
+    let is_dry_run = matches.is_present("dry-run");
+
+    Args {
+        pattern,
+        token,
+        is_dry_run,
+    }
 }
 
 pub fn output_and_send_issues(
@@ -106,13 +123,6 @@ pub fn output_and_send_issues(
     }
 
     println!("All done!");
-}
-
-pub fn prompt_to_continue() -> bool {
-    Confirmation::new()
-        .with_text("Do you want to continue?")
-        .interact()
-        .expect("Failed to read confirmation")
 }
 
 fn open_issue(request: &Request, issue: &Issue) {
