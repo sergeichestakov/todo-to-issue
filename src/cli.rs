@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use clap::{App, Arg};
+use console::style;
 use dialoguer::{theme::ColorfulTheme, Confirmation, Editor, Select};
 use glob::Pattern;
 
@@ -11,7 +12,9 @@ use super::request;
 use issue::Issue;
 use request::Request;
 
+const SELECTIONS: &[&str] = &["Open Issue", "Edit Issue", "Skip", "Exit"];
 const ALL_FILES: &str = "*";
+
 const OPEN: usize = 0;
 const EDIT: usize = 1;
 const SKIP: usize = 2;
@@ -78,17 +81,17 @@ pub fn output_and_send_issues(
     request: &Request,
     map: &HashMap<String, Vec<Issue>>,
 ) {
-    let selections = &["Open Issue", "Edit Issue", "Skip", "Exit"];
-
-    for (file, issues) in map {
+    for (_file, issues) in map {
         for issue in issues {
-            println!("Found issue in file {}:", &file);
-            println!("{}", &issue.to_string());
+            println!("\n{}", &issue.to_formatted_string());
 
+            let prompt =
+                format!("{}", style("What would you like to do?").italic())
+                    .to_string();
             let selection = Select::with_theme(&ColorfulTheme::default())
-                .with_prompt("What would you like to do?")
+                .with_prompt(&prompt)
                 .default(0)
-                .items(&selections[..])
+                .items(&SELECTIONS[..])
                 .interact()
                 .unwrap();
 
@@ -101,6 +104,8 @@ pub fn output_and_send_issues(
             }
         }
     }
+
+    println!("All done!");
 }
 
 pub fn prompt_to_continue() -> bool {
@@ -116,11 +121,15 @@ fn open_issue(request: &Request, issue: &Issue) {
             "Successfully created issue with title: {}",
             issue.get_title()
         ),
-        Err(e) => println!(
-            "Failed to open issue {}. Received error {}",
-            issue.get_title(),
-            e
-        ),
+        Err(e) => {
+            let error_msg = format!(
+                "Failed to open issue {}. Received error {}",
+                issue.get_title(),
+                e
+            )
+            .to_string();
+            println!("{}", style(error_msg).yellow());
+        }
     }
 }
 
@@ -128,7 +137,8 @@ fn edit_and_open_issue(request: &Request, issue: &Issue) {
     match edit_issue(issue) {
         Some(issue) => open_issue(request, &issue),
         None => println!(
-            "Failed to create issue. Please check format and try again."
+            "{}",
+            style("Invalid format. Failed to create issue.").yellow()
         ),
     }
 }

@@ -4,6 +4,7 @@ use std::io::{self, prelude::*, BufReader};
 use std::str;
 
 use super::issue;
+use console::style;
 use issue::Issue;
 
 const TODO: &str = "TODO";
@@ -32,16 +33,32 @@ pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
     for (file, issues) in map {
         let num_issues = issues.len();
         if num_issues > 0 {
-            println!("Found {} issue(s) in file {}", num_issues, file);
+            println!(
+                "Found {} {} in {}",
+                style(num_issues).bold(),
+                handle_plural(&num_issues, "issue"),
+                style(file).italic()
+            );
             total += num_issues;
         }
     }
 
     match total {
         0 => println!("No TODOs found. You're all set!"),
-        num_issues => println!("Found {} TODO(s) total.", num_issues),
+        num_issues => println!(
+            "Found {} {} total.",
+            style(num_issues).bold(),
+            handle_plural(&num_issues, "TODO")
+        ),
     }
     return total;
+}
+
+pub fn handle_plural(number: &usize, word: &str) -> String {
+    match number {
+        1 => word.to_string(),
+        _ => format!("{}s", word).to_string(),
+    }
 }
 
 fn find_issues(

@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use console::style;
 use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
 
@@ -7,12 +8,14 @@ use issue::Issue;
 
 use super::command;
 use super::issue;
+use super::parse;
 
 const API_ENDPOINT: &str = "https://api.github.com";
 
 pub struct Request {
     client: reqwest::Client,
     url: String,
+    remote_url: String,
     auth_header: String,
 }
 
@@ -27,6 +30,7 @@ impl Request {
             client: reqwest::Client::new(),
             url: format!("{}/repos/{}/issues", API_ENDPOINT, remote)
                 .to_string(),
+            remote_url: format!("https://github.com/{}", remote).to_string(),
             auth_header: format!("token {}", token).to_string(),
         }
     }
@@ -64,7 +68,11 @@ impl Request {
         params.insert("labels", issue::LABEL);
         params.insert("state", "all");
 
-        println!("Fetching all issues with TODO label...");
+        println!(
+            "Fetching all issues with {} label from {}",
+            style(issue::LABEL).cyan(),
+            style(&self.remote_url).italic()
+        );
         let mut response = self
             .client
             .get(&self.url)
@@ -81,7 +89,11 @@ impl Request {
             }
         }
 
-        println!("Found {} previously opened issues.", issues.len());
+        println!(
+            "Found {} previously opened {}.",
+            style(issues.len()).bold(),
+            parse::handle_plural(&issues.len(), "issue")
+        );
         Ok(issues)
     }
 

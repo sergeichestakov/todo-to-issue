@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use console::style;
 use serde::Deserialize;
 
 pub const LABEL: &str = "TODO";
@@ -70,6 +71,17 @@ impl Issue {
         format!(
             "{} {}\n{} {}",
             TITLE_PREFIX, &self.title, BODY_PREFIX, &self.body
+        )
+        .to_string()
+    }
+
+    pub fn to_formatted_string(&self) -> String {
+        format!(
+            "{} {}\n{} {}",
+            style(TITLE_PREFIX).bold(),
+            &self.title,
+            style(BODY_PREFIX).bold(),
+            &self.body
         )
         .to_string()
     }
