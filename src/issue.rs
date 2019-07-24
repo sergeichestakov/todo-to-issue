@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use console::style;
 use serde::Deserialize;
+use serde_json::{json, value::Value};
 
 pub const LABEL: &str = "TODO";
 const TITLE_PREFIX: &str = "Title:";
@@ -86,12 +85,14 @@ impl Issue {
         .to_string()
     }
 
-    pub fn to_map(&self) -> HashMap<&str, &str> {
-        let mut params = HashMap::new();
-        params.insert("title", self.title.as_str());
-        params.insert("body", self.body.as_str());
-        params.insert("labels", LABEL);
-        return params;
+    pub fn to_json(&self) -> Value {
+        json!({
+            "title": &self.title,
+            "body": &self.body,
+            "labels": [
+                LABEL,
+            ]
+        })
     }
 }
 

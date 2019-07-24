@@ -43,12 +43,11 @@ impl Request {
         //! the inputted params (title and description).
         //!
         //! Panics if the response is not 201 Created or the request fails.
-        let params = issue.to_map();
         let response = self
             .client
             .post(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
-            .json(&params)
+            .json(&issue.to_json())
             .send()?;
 
         Self::assert_successful_response(response.status());
@@ -90,7 +89,9 @@ impl Request {
         }
 
         match issues.len() {
-            0 => println!("No previously opened issues found in the remote repo."),
+            0 => println!(
+                "No previously opened issues found in the remote repo."
+            ),
             n => println!(
                 "Found {} previously opened {} in the remote repo.",
                 style(n).bold(),
