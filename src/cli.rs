@@ -12,7 +12,7 @@ use super::request;
 use issue::Issue;
 use request::Request;
 
-const SELECTIONS: &[&str] = &["Open Issue", "Edit Issue", "Skip", "Exit"];
+const SELECTIONS: &[&str] = &["Open Issue", "Edit Issue", "Skip Issue", "Exit"];
 const ALL_FILES: &str = "*";
 
 const OPEN: usize = 0;
@@ -96,8 +96,10 @@ pub fn output_and_send_issues(
     request: &Request,
     map: &HashMap<String, Vec<Issue>>,
 ) {
+    let mut is_empty = true;
     for (_file, issues) in map {
         for issue in issues {
+            is_empty = false;
             println!("\n{}", &issue.to_formatted_string());
 
             let prompt =
@@ -112,7 +114,7 @@ pub fn output_and_send_issues(
 
             match selection {
                 OPEN => open_issue(&request, &issue),
-                EDIT => edit_and_open_issue(&request, &issue),
+                EDIT => edit_issue(&request, &issue),
                 SKIP => continue,
                 EXIT => return,
                 _ => (),
@@ -120,43 +122,49 @@ pub fn output_and_send_issues(
         }
     }
 
-    println!("All done!");
+    if !is_empty {
+        println!("{}", style("All done!").green());
+    }
+}
+
+fn edit_issue(request: &Request, issue: &Issue) {
+    let result = Editor::new().edit(&issue.to_string()).unwrap();
+
+    if let Some(input) = result {
+        match Issue::from_string(input) {
+            Some(new_issue) => open_issue(request, &new_issue),
+            None => println!(
+                "{}",
+                style("Invalid format. Not creating issue.").yellow()
+            ),
+        }
+    } else {
+        println!(
+            "{}",
+            style("Editor closed without saving. Not creating issue.").yellow()
+        );
+    }
 }
 
 fn open_issue(request: &Request, issue: &Issue) {
     match request.open_issue(issue) {
-        Ok(()) => println!(
-            "Successfully created issue with title: {}",
-            issue.get_title()
-        ),
+        Ok(()) => {
+            let success_msg = format!(
+                "Successfully opened issue with title: \"{}\"",
+                issue.get_title()
+            )
+            .to_string();
+
+            println!("{}", style(success_msg).green());
+        }
         Err(e) => {
             let error_msg = format!(
-                "Failed to open issue {}. Received error {}",
+                "Failed to open issue \"{}\". Received error {}",
                 issue.get_title(),
                 e
             )
             .to_string();
-            println!("{}", style(error_msg).yellow());
+            println!("{}", style(error_msg).red());
         }
-    }
-}
-
-fn edit_and_open_issue(request: &Request, issue: &Issue) {
-    match edit_issue(issue) {
-        Some(issue) => open_issue(request, &issue),
-        None => println!(
-            "{}",
-            style("Invalid format. Failed to create issue.").yellow()
-        ),
-    }
-}
-
-fn edit_issue(issue: &Issue) -> Option<Issue> {
-    let result = Editor::new().edit(&issue.to_string()).unwrap();
-
-    if let Some(input) = result {
-        return Issue::from_string(input);
-    } else {
-        return None;
     }
 }

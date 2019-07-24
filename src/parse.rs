@@ -17,6 +17,7 @@ pub fn populate_map(
     let mut file_to_issues = HashMap::new();
     let mut total = 0;
 
+    println!("\nSearching all files tracked by git for TODO comments...");
     for file in files {
         if pattern.matches(&file) {
             let result = find_issues(&file, &issues);
@@ -37,7 +38,7 @@ pub fn populate_map(
     }
 
     match total {
-        0 => println!("No TODOs found. You're all set!"),
+        0 => println!("{}", style("No TODOs found. You're all set!").green()),
         num_issues => println!(
             "Found {} {} total.",
             style(num_issues).bold(),

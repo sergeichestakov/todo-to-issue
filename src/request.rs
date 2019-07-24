@@ -90,9 +90,9 @@ impl Request {
         }
 
         match issues.len() {
-            0 => println!("No previously opened issues found."),
+            0 => println!("No previously opened issues found in the remote repo."),
             n => println!(
-                "Found {} previously opened {}.",
+                "Found {} previously opened {} in the remote repo.",
                 style(n).bold(),
                 parse::handle_plural(&n, "issue")
             ),
