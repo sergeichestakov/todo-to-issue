@@ -40,11 +40,7 @@ impl Args {
     }
 }
 
-pub fn init() -> Args {
-    if !command::is_git_repo() {
-        panic!("Must be in a git directory!");
-    }
-
+pub fn init() -> Option<Args> {
     let matches = App::new("todo-to-issue")
         .version("0.1")
         .author("Sergei Chestakov <sergei332@gmail.com>")
@@ -70,6 +66,11 @@ pub fn init() -> Args {
         )
         .get_matches();
 
+    if !command::is_git_repo() {
+        println!("{}", style("Error: Must be in a git repository.").red());
+        return None;
+    }
+
     let pattern_value = matches.value_of("pattern").unwrap_or(ALL_FILES);
 
     let pattern = match Pattern::new(pattern_value) {
@@ -84,11 +85,11 @@ pub fn init() -> Args {
 
     let is_dry_run = matches.is_present("dry-run");
 
-    Args {
+    return Some(Args {
         pattern,
         token,
         is_dry_run,
-    }
+    });
 }
 
 pub fn output_and_send_issues(

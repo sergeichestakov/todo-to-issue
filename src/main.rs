@@ -7,7 +7,10 @@ mod request;
 use request::Request;
 
 fn main() {
-    let args = cli::init();
+    let args = match cli::init() {
+        Some(args) => args,
+        None => return,
+    };
 
     let request = Request::new(args.get_token());
     let files = command::get_tracked_files();
