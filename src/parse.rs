@@ -13,11 +13,11 @@ pub fn populate_map(
     files: &Vec<String>,
     issues: &HashSet<String>,
     pattern: &glob::Pattern,
-) -> HashMap<String, Vec<Issue>> {
+) -> (HashMap<String, Vec<Issue>>, usize) {
     let mut file_to_issues = HashMap::new();
     let mut total = 0;
 
-    println!("\nSearching all files tracked by git for TODO comments...");
+    println!("Searching all files tracked by git for TODO comments...");
     for file in files {
         if pattern.matches(&file) {
             let result = find_issues(&file, &issues);
@@ -46,7 +46,7 @@ pub fn populate_map(
         ),
     }
 
-    file_to_issues
+    (file_to_issues, total)
 }
 
 pub fn handle_plural(number: &usize, word: &str) -> String {

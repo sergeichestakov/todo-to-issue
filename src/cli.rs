@@ -96,10 +96,8 @@ pub fn output_and_send_issues(
     request: &Request,
     map: &HashMap<String, Vec<Issue>>,
 ) {
-    let mut is_empty = true;
     for (_file, issues) in map {
         for issue in issues {
-            is_empty = false;
             println!("\n{}", &issue.to_formatted_string());
 
             let prompt =
@@ -122,9 +120,7 @@ pub fn output_and_send_issues(
         }
     }
 
-    if !is_empty {
-        println!("{}", style("All done!").green());
-    }
+    println!("{}", style("All done!").green());
 }
 
 fn edit_issue(request: &Request, issue: &Issue) {
