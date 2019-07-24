@@ -13,6 +13,7 @@ pub fn find_all_todos(
     files: &Vec<String>,
     issues: &HashSet<String>,
     pattern: &glob::Pattern,
+    is_verbose: bool,
 ) -> HashMap<String, Vec<Issue>> {
     //! Reads every file that matches the specified glob pattern
     //! and searches for "todo" comments line by line.
@@ -34,7 +35,7 @@ pub fn find_all_todos(
 
     for file in files {
         if pattern.matches(&file) {
-            let result = find_todos_in_file(&file, &issues);
+            let result = find_todos_in_file(&file, &issues, is_verbose);
             if let Ok(vector) = result {
                 let num_issues = vector.len();
                 if num_issues > 0 {
@@ -44,6 +45,9 @@ pub fn find_all_todos(
                         handle_plural(&num_issues, "TODO"),
                         style(file).italic()
                     );
+                    if is_verbose {
+                        println!();
+                    }
                     file_to_issues.insert(file.clone(), vector);
                     total += num_issues;
                 }
@@ -73,6 +77,7 @@ pub fn handle_plural(number: &usize, word: &str) -> String {
 fn find_todos_in_file(
     path: &str,
     prev_issues: &HashSet<String>,
+    is_verbose: bool,
 ) -> io::Result<(Vec<Issue>)> {
     //! Reads every line in a file for a "todo" comment, creating an Issue
     //! object for each one with the parsed title and description.
@@ -94,6 +99,9 @@ fn find_todos_in_file(
             let title = extract_title(&line);
             let body = create_body(&line_number, path);
 
+            if is_verbose {
+                println!("Line {}: \"{}\"", &line_number, title)
+            }
             if !prev_issues.contains(title.as_str()) {
                 let issue = Issue::new(title, body);
                 issues_in_file.push(issue);

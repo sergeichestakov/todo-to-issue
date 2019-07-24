@@ -24,6 +24,7 @@ pub struct Args {
     pattern: Pattern,
     token: String,
     is_dry_run: bool,
+    is_verbose: bool,
 }
 
 impl Args {
@@ -37,6 +38,10 @@ impl Args {
 
     pub fn is_dry_run(&self) -> bool {
         self.is_dry_run
+    }
+
+    pub fn is_verbose(&self) -> bool {
+        self.is_verbose
     }
 }
 
@@ -68,6 +73,12 @@ pub fn init() -> Option<Args> {
                 .long("dry-run")
                 .help("Outputs the number of TODOs without opening any issues"),
         )
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Makes output more descriptive"),
+        )
         .get_matches();
 
     if !command::is_git_repo() {
@@ -88,11 +99,13 @@ pub fn init() -> Option<Args> {
     };
 
     let is_dry_run = matches.is_present("dry-run");
+    let is_verbose = matches.is_present("verbose");
 
     return Some(Args {
         pattern,
         token,
         is_dry_run,
+        is_verbose,
     });
 }
 
