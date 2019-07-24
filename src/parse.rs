@@ -74,10 +74,13 @@ fn find_issues(
     let mut issues_in_file = Vec::new();
 
     let mut line_number = 0;
-    for line_option in buffer.lines() {
-        let line = line_option.unwrap();
+    for line_result in buffer.lines() {
+        if line_result.is_err() {
+            continue;
+        }
         line_number += 1;
 
+        let line = line_result.unwrap();
         if contains_todo(&line) {
             let title = extract_title(&line);
             let body = create_body(&line_number, path);
