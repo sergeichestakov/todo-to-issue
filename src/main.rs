@@ -23,9 +23,9 @@ fn main() {
 
     let pattern = args.get_pattern();
     let files = command::get_tracked_files();
-    let (file_to_issues, total) = parse::populate_map(&files, &issues, pattern);
+    let file_to_issues = parse::find_all_todos(&files, &issues, pattern);
 
-    if total > 0 && !is_dry_run {
-        cli::output_and_send_issues(&request, &file_to_issues);
+    if file_to_issues.len() > 0 && !is_dry_run {
+        cli::output_issues_and_prompt_user(&request, &file_to_issues);
     }
 }

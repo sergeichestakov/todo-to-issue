@@ -41,6 +41,10 @@ impl Args {
 }
 
 pub fn init() -> Option<Args> {
+    //! Initializes the CLI and parses command line arguments.
+    //!
+    //! Returns an Option containing the Args as a struct or None
+    //! if the user is not in a git repo.
     let matches = App::new("todo-to-issue")
         .version("0.1")
         .author("Sergei Chestakov <sergei332@gmail.com>")
@@ -62,7 +66,7 @@ pub fn init() -> Option<Args> {
             Arg::with_name("dry-run")
                 .short("n")
                 .long("dry-run")
-                .help("Output the number of TODOs without opening any issues"),
+                .help("Outputs the number of TODOs without opening any issues"),
         )
         .get_matches();
 
@@ -92,10 +96,17 @@ pub fn init() -> Option<Args> {
     });
 }
 
-pub fn output_and_send_issues(
+pub fn output_issues_and_prompt_user(
     request: &Request,
     map: &HashMap<String, Vec<Issue>>,
 ) {
+    //! Outputs every todo comment found and prompts the user for action.
+    //!
+    //! Allows the user to
+    //! - Open a GitHub issue
+    //! - Edit the body or title before opening
+    //! - Skip to the next one
+    //! - Exit the program
     for (_file, issues) in map {
         for issue in issues {
             println!("\n{}", &issue.to_formatted_string());
@@ -124,6 +135,12 @@ pub fn output_and_send_issues(
 }
 
 fn edit_issue(request: &Request, issue: &Issue) {
+    //! Opens the user's default editor and allows them to edit an issue's
+    //! title and body before opening it.
+    //!
+    //! Creates an issue on GitHub if the format is valid
+    //! (see Issue::from_string) and the user saves and quits.
+    //! Aborts the operation if the user exits without saving.
     let result = Editor::new().edit(&issue.to_string()).unwrap();
 
     if let Some(input) = result {
@@ -143,6 +160,7 @@ fn edit_issue(request: &Request, issue: &Issue) {
 }
 
 fn open_issue(request: &Request, issue: &Issue) {
+    //! Creates the GitHub issue and outputs the result.
     match request.open_issue(issue) {
         Ok(()) => {
             let success_msg = format!(

@@ -26,6 +26,12 @@ impl Issue {
     }
 
     pub fn from_string(string: String) -> Option<Issue> {
+        //! Initializes an Issue from a string with the following format:
+        //!
+        //! 1. The first line starts with "Title:" followed by a nonempty string
+        //! 2. The second line starts with "Body:" followed by a description
+        //! that spans one or more lines.
+
         // 1. Split the string based on \n
         let split: Vec<&str> = string.split("\n").collect();
         // 2. Assert there are AT LEAST two parts

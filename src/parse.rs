@@ -9,11 +9,16 @@ use issue::Issue;
 
 const TODO: &str = "TODO";
 
-pub fn populate_map(
+pub fn find_all_todos(
     files: &Vec<String>,
     issues: &HashSet<String>,
     pattern: &glob::Pattern,
-) -> (HashMap<String, Vec<Issue>>, usize) {
+) -> HashMap<String, Vec<Issue>> {
+    //! Reads every file that matches the specified glob pattern
+    //! and searches for "todo" comments line by line.
+    //!
+    //! Returns a HashMap that maps file path to a vector of Issue objects that
+    //! represents the "todos" found in the file.
     let mut file_to_issues = HashMap::new();
     let mut total = 0;
 
@@ -21,12 +26,15 @@ pub fn populate_map(
     if pattern_str == "*" {
         println!("Searching all files tracked by git for TODO comments...");
     } else {
-        println!("Searching all files with pattern \"{}\"", pattern_str);
+        println!(
+            "Searching all files with pattern \"{}\" for TODO comments...",
+            pattern_str
+        );
     }
 
     for file in files {
         if pattern.matches(&file) {
-            let result = find_issues(&file, &issues);
+            let result = find_todos_in_file(&file, &issues);
             if let Ok(vector) = result {
                 let num_issues = vector.len();
                 if num_issues > 0 {
@@ -36,9 +44,9 @@ pub fn populate_map(
                         handle_plural(&num_issues, "TODO"),
                         style(file).italic()
                     );
+                    file_to_issues.insert(file.clone(), vector);
+                    total += num_issues;
                 }
-                total += num_issues;
-                file_to_issues.insert(file.clone(), vector);
             }
         }
     }
@@ -52,7 +60,7 @@ pub fn populate_map(
         ),
     }
 
-    (file_to_issues, total)
+    file_to_issues
 }
 
 pub fn handle_plural(number: &usize, word: &str) -> String {
@@ -62,7 +70,7 @@ pub fn handle_plural(number: &usize, word: &str) -> String {
     }
 }
 
-fn find_issues(
+fn find_todos_in_file(
     path: &str,
     prev_issues: &HashSet<String>,
 ) -> io::Result<(Vec<Issue>)> {
