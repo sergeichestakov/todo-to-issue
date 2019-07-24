@@ -3,8 +3,6 @@ use std::str;
 
 use dialoguer::PasswordInput;
 
-const FATAL_GIT_STATUS_PREFIX: &str = "fatal:";
-
 pub fn read_access_token() -> String {
     //! Reads in a user's personal access token from GitHub.
     println!("Please enter your personal access token.");
@@ -22,7 +20,7 @@ pub fn is_git_repo() -> bool {
         .expect("Failed to execute `git status`");
     let output = str::from_utf8(&command.stdout).unwrap().trim();
 
-    !output.starts_with(FATAL_GIT_STATUS_PREFIX)
+    !output.is_empty()
 }
 
 pub fn get_remote_name() -> String {
