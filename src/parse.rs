@@ -17,7 +17,13 @@ pub fn populate_map(
     let mut file_to_issues = HashMap::new();
     let mut total = 0;
 
-    println!("Searching all files tracked by git for TODO comments...");
+    let pattern_str = pattern.as_str();
+    if pattern_str == "*" {
+        println!("Searching all files tracked by git for TODO comments...");
+    } else {
+        println!("Searching all files with pattern \"{}\"", pattern_str);
+    }
+
     for file in files {
         if pattern.matches(&file) {
             let result = find_issues(&file, &issues);
@@ -27,7 +33,7 @@ pub fn populate_map(
                     println!(
                         "Found {} {} in {}",
                         style(num_issues).bold(),
-                        handle_plural(&num_issues, "issue"),
+                        handle_plural(&num_issues, "TODO"),
                         style(file).italic()
                     );
                 }
