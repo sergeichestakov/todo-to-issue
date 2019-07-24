@@ -86,6 +86,9 @@ pub fn init() -> Option<Args> {
         return None;
     }
 
+    let is_dry_run = matches.is_present("dry-run");
+    let is_verbose = matches.is_present("verbose");
+
     let pattern_value = matches.value_of("pattern").unwrap_or(ALL_FILES);
 
     let pattern = match Pattern::new(pattern_value) {
@@ -95,11 +98,11 @@ pub fn init() -> Option<Args> {
 
     let token = match matches.value_of("token") {
         Some(t) => t.to_string(),
-        None => command::read_access_token(),
+        None => match is_dry_run {
+            true => String::new(),
+            false => command::read_access_token(),
+        },
     };
-
-    let is_dry_run = matches.is_present("dry-run");
-    let is_verbose = matches.is_present("verbose");
 
     return Some(Args {
         pattern,
