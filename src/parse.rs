@@ -15,31 +15,24 @@ pub fn populate_map(
     pattern: &glob::Pattern,
 ) -> HashMap<String, Vec<Issue>> {
     let mut file_to_issues = HashMap::new();
-
-    for path in files {
-        if pattern.matches(&path) {
-            let result = find_issues(&path, &issues);
-            if let Ok(vector) = result {
-                file_to_issues.insert(path.clone(), vector);
-            }
-        }
-    }
-
-    file_to_issues
-}
-
-pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
     let mut total = 0;
-    for (file, issues) in map {
-        let num_issues = issues.len();
-        if num_issues > 0 {
-            println!(
-                "Found {} {} in {}",
-                style(num_issues).bold(),
-                handle_plural(&num_issues, "issue"),
-                style(file).italic()
-            );
-            total += num_issues;
+
+    for file in files {
+        if pattern.matches(&file) {
+            let result = find_issues(&file, &issues);
+            if let Ok(vector) = result {
+                let num_issues = vector.len();
+                if num_issues > 0 {
+                    println!(
+                        "Found {} {} in {}",
+                        style(num_issues).bold(),
+                        handle_plural(&num_issues, "issue"),
+                        style(file).italic()
+                    );
+                }
+                total += num_issues;
+                file_to_issues.insert(file.clone(), vector);
+            }
         }
     }
 
@@ -51,7 +44,8 @@ pub fn count_issues(map: &HashMap<String, Vec<issue::Issue>>) -> usize {
             handle_plural(&num_issues, "TODO")
         ),
     }
-    return total;
+
+    file_to_issues
 }
 
 pub fn handle_plural(number: &usize, word: &str) -> String {

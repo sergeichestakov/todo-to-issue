@@ -15,9 +15,8 @@ fn main() {
 
     let pattern = args.get_pattern();
     let file_to_issues = parse::populate_map(&files, &issues, pattern);
-    let total = parse::count_issues(&file_to_issues);
 
-    if total > 0 && !args.is_dry_run() {
+    if file_to_issues.len() > 0 && !args.is_dry_run() {
         cli::output_and_send_issues(&request, &file_to_issues);
     }
 }
