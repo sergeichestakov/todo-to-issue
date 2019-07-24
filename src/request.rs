@@ -1,8 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use console::style;
 use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
+use serde_json::json;
 
 use issue::Issue;
 
@@ -63,20 +64,21 @@ impl Request {
         //!
         //! Returns a hashset of the issue titles. Panics if the response
         //! is not 200 OK or the request fails.
-        let mut params = HashMap::new();
-        params.insert("labels", issue::LABEL);
-        params.insert("state", "all");
-
         println!(
             "Fetching all issues with {} label from {}",
             style(issue::LABEL).cyan(),
             style(&self.remote_url).italic()
         );
+
+        let json = json!({
+            "labels": issue::LABEL,
+            "state": "all",
+        });
         let mut response = self
             .client
             .get(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
-            .query(&params)
+            .query(&json)
             .send()?;
 
         Self::assert_successful_response(response.status());
@@ -93,7 +95,7 @@ impl Request {
                 "No previously opened issues found in the remote repo."
             ),
             n => println!(
-                "Found {} previously opened {} in the remote repo.",
+                "Found {} previously opened {} in the remote repo.\n",
                 style(n).bold(),
                 parse::handle_plural(&n, "issue")
             ),
