@@ -36,10 +36,7 @@ impl Request {
         }
     }
 
-    pub fn open_issue(
-        &self,
-        issue: &Issue,
-    ) -> Result<usize, Box<std::error::Error>> {
+    pub fn open_issue(&self, issue: &Issue) -> Option<usize> {
         //! Makes a POST request to create a new issue with
         //! the inputted params (title and description).
         //!
@@ -50,25 +47,29 @@ impl Request {
             .post(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
             .json(&issue.to_json())
-            .send()?;
+            .send()
+            .expect("Failed to create issue");
 
-        Self::assert_successful_response(response.status());
+        if !Self::is_successful_response(response.status()) {
+            return None;
+        }
 
-        if let Ok(json) = response.json::<issue::Response>() {
-            return Ok(json.get_number());
-        };
-
-        Ok(0)
+        match response.json::<issue::Response>() {
+            Ok(json) => Some(json.get_number()),
+            Err(_) => None,
+        }
     }
 
-    pub fn get_issues(
-        &self,
-    ) -> Result<HashSet<String>, Box<std::error::Error>> {
+    pub fn get_issues(&self, is_dry_run: bool) -> Option<HashSet<String>> {
         //! Makes a GET request to retrieve all issues (open and closed)
         //! with a todo label in the remote repository.
         //!
-        //! Returns a hashset of the issue titles. Panics if the response
+        //! Returns a hashset of the issue titles. Returns early if the response
         //! is not 200 OK or the request fails.
+        if is_dry_run {
+            return Some(HashSet::new());
+        }
+
         println!(
             "Fetching all issues with {} label from {}",
             style(issue::LABEL).cyan(),
@@ -84,9 +85,12 @@ impl Request {
             .get(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
             .query(&params)
-            .send()?;
+            .send()
+            .expect("Failed to get issues");
 
-        Self::assert_successful_response(response.status());
+        if !Self::is_successful_response(response.status()) {
+            return None;
+        }
 
         let mut issues = HashSet::new();
         if let Ok(json_array) = response.json::<Vec<issue::Response>>() {
@@ -106,40 +110,60 @@ impl Request {
             ),
         };
 
-        Ok(issues)
+        Some(issues)
     }
 
-    fn assert_successful_response(status: StatusCode) {
+    fn is_successful_response(status: StatusCode) -> bool {
         //! Asserts that the status code returned is either
         //! 200 OK or 201 CREATED.
         //!
-        //! Otherwise, panics with a detailed description.
+        //! Otherwise, outputs a detailed description.
         match status {
-            StatusCode::OK | StatusCode::CREATED => (),
+            StatusCode::OK | StatusCode::CREATED => return true,
             StatusCode::UNAUTHORIZED => {
-                panic!(
-                    "Unathorized request. \
-                     Make sure your access token is valid and \
-                     you have pull access to the repository."
+                println!(
+                    "{}",
+                    style(
+                        "Unathorized request. \
+                         Make sure your access token is valid and \
+                         you have pull access to the repository."
+                    )
+                    .red()
                 );
             }
             StatusCode::GONE => {
-                panic!("Issues are disabled in this repository.");
+                println!(
+                    "{}",
+                    style("Issues are disabled in this repository.").red()
+                );
             }
             StatusCode::FORBIDDEN => {
-                panic!(
-                    "You have reached the GitHub API rate limit. \
-                     Please try again later."
+                println!(
+                    "{}",
+                    style(
+                        "You have reached the GitHub API rate limit. \
+                         Please try again later."
+                    )
+                    .red()
                 );
             }
             StatusCode::NOT_FOUND => {
-                panic!(
-                    "Repo or username not found. \
-                     If your repository is private check that \
-                     your access token has the correct permissions."
+                println!(
+                    "{}",
+                    style(
+                        "Repo or username not found. \
+                         If your repository is private check that \
+                         your access token has the correct permissions."
+                    )
+                    .red()
                 );
             }
-            s => panic!("Received unexpected status code {}", s),
+            StatusCode::UNPROCESSABLE_ENTITY => {
+                println!("{}", style("Unable to process request.").red())
+            }
+            s => println!("Received unexpected status code {}", s),
         };
+
+        false
     }
 }

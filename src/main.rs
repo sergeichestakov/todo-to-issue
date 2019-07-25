@@ -5,7 +5,6 @@ mod parse;
 mod request;
 
 use request::Request;
-use std::collections::HashSet;
 
 fn main() {
     let args = match cli::init() {
@@ -15,10 +14,9 @@ fn main() {
 
     let is_dry_run = args.is_dry_run();
     let request = Request::new(args.get_token());
-    let issues = if is_dry_run {
-        HashSet::new()
-    } else {
-        request.get_issues().expect("Failed to get issues")
+    let issues = match request.get_issues(is_dry_run) {
+        Some(issues) => issues,
+        None => return,
     };
 
     let pattern = args.get_pattern();

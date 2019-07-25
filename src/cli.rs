@@ -18,7 +18,6 @@ const ALL_FILES: &str = "*";
 const OPEN: usize = 0;
 const EDIT: usize = 1;
 const SKIP: usize = 2;
-const EXIT: usize = 3;
 
 pub struct Args {
     pattern: Pattern,
@@ -137,12 +136,14 @@ pub fn output_issues_and_prompt_user(
                 .interact()
                 .unwrap();
 
-            match selection {
+            let done = match selection {
                 OPEN => open_issue(&request, &issue),
                 EDIT => edit_issue(&request, &issue),
-                SKIP => continue,
-                EXIT => return,
-                _ => (),
+                SKIP => false,
+                _ => true,
+            };
+            if done {
+                return;
             }
         }
     }
@@ -150,35 +151,42 @@ pub fn output_issues_and_prompt_user(
     println!("{}", style("All done!").green());
 }
 
-fn edit_issue(request: &Request, issue: &Issue) {
+fn edit_issue(request: &Request, issue: &Issue) -> bool {
     //! Opens the user's default editor and allows them to edit an issue's
     //! title and body before opening it.
     //!
     //! Creates an issue on GitHub if the format is valid
     //! (see Issue::from_string) and the user saves and quits.
     //! Aborts the operation if the user exits without saving.
+    //! Returns a bool indicating whether or not to terminate the program.
     let result = Editor::new().edit(&issue.to_string()).unwrap();
 
-    if let Some(input) = result {
-        match Issue::from_string(input) {
-            Some(new_issue) => open_issue(request, &new_issue),
-            None => println!(
-                "{}",
-                style("Invalid format. Not creating issue.").yellow()
-            ),
-        }
-    } else {
-        println!(
+    match result {
+        Some(input) => {
+            match Issue::from_string(input) {
+                Some(new_issue) => {
+                    return open_issue(request, &new_issue);
+                }
+                None => println!(
+                    "{}",
+                    style("Invalid format. Not creating issue.").yellow()
+                ),
+            }
+        },
+        None => println!(
             "{}",
             style("Editor closed without saving. Not creating issue.").yellow()
-        );
+        ),
     }
+
+    false
 }
 
-fn open_issue(request: &Request, issue: &Issue) {
+fn open_issue(request: &Request, issue: &Issue) -> bool {
     //! Creates the GitHub issue and outputs the result.
+    //! Returns a bool indicating whether or not to terminate the program.
     match request.open_issue(issue) {
-        Ok(issue_number) => {
+        Some(issue_number) => {
             let success_msg = format!(
                 "Successfully opened issue #{}: \"{}\"",
                 issue_number,
@@ -187,15 +195,8 @@ fn open_issue(request: &Request, issue: &Issue) {
             .to_string();
 
             println!("{}", style(success_msg).green());
+            false
         }
-        Err(e) => {
-            let error_msg = format!(
-                "Failed to open issue \"{}\". Received error {}",
-                issue.get_title(),
-                e
-            )
-            .to_string();
-            println!("{}", style(error_msg).red());
-        }
+        None => true,
     }
 }
