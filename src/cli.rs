@@ -178,9 +178,10 @@ fn edit_issue(request: &Request, issue: &Issue) {
 fn open_issue(request: &Request, issue: &Issue) {
     //! Creates the GitHub issue and outputs the result.
     match request.open_issue(issue) {
-        Ok(()) => {
+        Ok(issue_number) => {
             let success_msg = format!(
-                "Successfully opened issue with title: \"{}\"",
+                "Successfully opened issue #{}: \"{}\"",
+                issue_number,
                 issue.get_title()
             )
             .to_string();

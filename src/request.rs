@@ -39,12 +39,13 @@ impl Request {
     pub fn open_issue(
         &self,
         issue: &Issue,
-    ) -> Result<(), Box<std::error::Error>> {
+    ) -> Result<usize, Box<std::error::Error>> {
         //! Makes a POST request to create a new issue with
         //! the inputted params (title and description).
         //!
         //! Panics if the response is not 201 Created or the request fails.
-        let response = self
+        //! Returns a number which represents the issue number from GitHub.
+        let mut response = self
             .client
             .post(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
@@ -53,7 +54,11 @@ impl Request {
 
         Self::assert_successful_response(response.status());
 
-        Ok(())
+        if let Ok(json) = response.json::<issue::Response>() {
+            return Ok(json.get_number());
+        };
+
+        Ok(0)
     }
 
     pub fn get_issues(

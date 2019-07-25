@@ -13,11 +13,8 @@ pub struct Issue {
 
 #[derive(Debug, Deserialize)]
 pub struct Response {
-    id: u32,
     title: String,
-    body: String,
-    number: u32,
-    state: String,
+    number: usize,
 }
 
 impl Issue {
@@ -104,6 +101,10 @@ impl Issue {
 
 impl Response {
     pub fn get_title(&self) -> String {
-        self.title.to_string()
+        self.title.clone()
+    }
+
+    pub fn get_number(&self) -> usize {
+        self.number
     }
 }
