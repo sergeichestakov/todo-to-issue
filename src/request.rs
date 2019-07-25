@@ -7,9 +7,9 @@ use serde_json::json;
 
 use issue::Issue;
 
+use super::cli;
 use super::command;
 use super::issue;
-use super::parse;
 
 const API_ENDPOINT: &str = "https://api.github.com";
 
@@ -106,7 +106,7 @@ impl Request {
             n => println!(
                 "Found {} previously opened {} in the remote repo.",
                 style(n).bold(),
-                parse::handle_plural(&n, "issue")
+                cli::handle_plural(&n, "issue")
             ),
         };
 
@@ -120,48 +120,29 @@ impl Request {
         //! Otherwise, outputs a detailed description.
         match status {
             StatusCode::OK | StatusCode::CREATED => return true,
-            StatusCode::UNAUTHORIZED => {
-                println!(
-                    "{}",
-                    style(
-                        "Unathorized request. \
-                         Make sure your access token is valid and \
-                         you have pull access to the repository."
-                    )
-                    .red()
-                );
-            }
+            StatusCode::UNAUTHORIZED => cli::print_error(
+                "Unathorized request. \
+                 Make sure your access token is valid and \
+                 you have pull access to the repository.",
+            ),
             StatusCode::GONE => {
-                println!(
-                    "{}",
-                    style("Issues are disabled in this repository.").red()
-                );
+                cli::print_error("Issues are disabled in this repository.");
             }
-            StatusCode::FORBIDDEN => {
-                println!(
-                    "{}",
-                    style(
-                        "You have reached the GitHub API rate limit. \
-                         Please try again later."
-                    )
-                    .red()
-                );
-            }
-            StatusCode::NOT_FOUND => {
-                println!(
-                    "{}",
-                    style(
-                        "Repo or username not found. \
-                         If your repository is private check that \
-                         your access token has the correct permissions."
-                    )
-                    .red()
-                );
-            }
+            StatusCode::FORBIDDEN => cli::print_error(
+                "You have reached the GitHub API rate limit. \
+                 Please try again later.",
+            ),
+            StatusCode::NOT_FOUND => cli::print_error(
+                "Repo or username not found. \
+                 If your repository is private check that \
+                 your access token has the correct permissions.",
+            ),
             StatusCode::UNPROCESSABLE_ENTITY => {
-                println!("{}", style("Unable to process request.").red())
+                cli::print_error("Unable to process request.");
             }
-            s => println!("Received unexpected status code {}", s),
+            s => cli::print_error(
+                &format!("Received unexpected status code {}", s).to_string(),
+            ),
         };
 
         false

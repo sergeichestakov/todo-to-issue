@@ -151,6 +151,25 @@ pub fn output_issues_and_prompt_user(
     println!("{}", style("All done!").green());
 }
 
+pub fn print_success(msg: &str) {
+    println!("{}", style(msg).green());
+}
+
+pub fn print_warning(msg: &str) {
+    println!("{}", style(msg).yellow());
+}
+
+pub fn print_error(msg: &str) {
+    println!("{}", style(msg).red());
+}
+
+pub fn handle_plural(number: &usize, word: &str) -> String {
+    match number {
+        1 => word.to_string(),
+        _ => format!("{}s", word).to_string(),
+    }
+}
+
 fn edit_issue(request: &Request, issue: &Issue) -> bool {
     //! Opens the user's default editor and allows them to edit an issue's
     //! title and body before opening it.
@@ -162,21 +181,15 @@ fn edit_issue(request: &Request, issue: &Issue) -> bool {
     let result = Editor::new().edit(&issue.to_string()).unwrap();
 
     match result {
-        Some(input) => {
-            match Issue::from_string(input) {
-                Some(new_issue) => {
-                    return open_issue(request, &new_issue);
-                }
-                None => println!(
-                    "{}",
-                    style("Invalid format. Not creating issue.").yellow()
-                ),
+        Some(input) => match Issue::from_string(input) {
+            Some(new_issue) => {
+                return open_issue(request, &new_issue);
             }
+            None => print_warning("Invalid format. Not creating issue."),
         },
-        None => println!(
-            "{}",
-            style("Editor closed without saving. Not creating issue.").yellow()
-        ),
+        None => {
+            print_warning("Editor closed without saving. Not creating issue.")
+        }
     }
 
     false
@@ -194,7 +207,7 @@ fn open_issue(request: &Request, issue: &Issue) -> bool {
             )
             .to_string();
 
-            println!("{}", style(success_msg).green());
+            print_success(&success_msg);
             false
         }
         None => true,

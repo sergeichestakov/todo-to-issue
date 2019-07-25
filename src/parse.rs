@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::str;
 
+use super::cli;
 use super::issue;
 use console::style;
 use issue::Issue;
@@ -42,7 +43,7 @@ pub fn find_all_todos(
                     println!(
                         "Found {} {} in {}",
                         style(num_issues).bold(),
-                        handle_plural(&num_issues, "TODO"),
+                        cli::handle_plural(&num_issues, "TODO"),
                         style(file).italic()
                     );
                     if is_verbose {
@@ -56,22 +57,15 @@ pub fn find_all_todos(
     }
 
     match total {
-        0 => println!("{}", style("No TODOs found. You're all set!").green()),
+        0 => cli::print_success("No TODOs found. You're all set!"),
         num_issues => println!(
             "Found {} {} total.",
             style(num_issues).bold(),
-            handle_plural(&num_issues, "TODO")
+            cli::handle_plural(&num_issues, "TODO")
         ),
     }
 
     file_to_issues
-}
-
-pub fn handle_plural(number: &usize, word: &str) -> String {
-    match number {
-        1 => word.to_string(),
-        _ => format!("{}s", word).to_string(),
-    }
 }
 
 fn find_todos_in_file(
