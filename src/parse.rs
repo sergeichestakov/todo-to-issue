@@ -89,8 +89,8 @@ fn find_todos_in_file(
 
     let mut line_number = 0;
     for line_result in buffer.lines() {
-        if line_result.is_err() {
-            continue;
+        if let Err(e) = line_result {
+            return Err(e);
         }
         line_number += 1;
 
