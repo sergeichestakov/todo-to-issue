@@ -5,11 +5,11 @@ use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
 use serde_json::json;
 
-use issue::Issue;
-
 use super::cli;
 use super::command;
 use super::issue;
+
+use issue::Issue;
 
 const API_ENDPOINT: &str = "https://api.github.com";
 
@@ -117,7 +117,7 @@ impl Request {
         //! Asserts that the status code returned is either
         //! 200 OK or 201 CREATED.
         //!
-        //! Otherwise, outputs a detailed description.
+        //! Otherwise, outputs a detailed description about the error.
         match status {
             StatusCode::OK | StatusCode::CREATED => return true,
             StatusCode::UNAUTHORIZED => cli::print_error(
@@ -133,7 +133,7 @@ impl Request {
                  Please try again later.",
             ),
             StatusCode::NOT_FOUND => cli::print_error(
-                "Repo or username not found. \
+                "Remote repository not found. \
                  If your repository is private check that \
                  your access token has the correct permissions.",
             ),

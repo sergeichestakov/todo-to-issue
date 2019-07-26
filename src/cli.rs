@@ -81,7 +81,7 @@ pub fn init() -> Option<Args> {
         .get_matches();
 
     if !command::is_git_repo() {
-        println!("{}", style("Error: Must be in a git repository.").red());
+        print_error("Must be in a git repository.");
         return None;
     }
 
@@ -148,7 +148,7 @@ pub fn output_issues_and_prompt_user(
         }
     }
 
-    println!("{}", style("All done!").green());
+    print_success("All done!");
 }
 
 pub fn print_success(msg: &str) {
@@ -160,7 +160,7 @@ pub fn print_warning(msg: &str) {
 }
 
 pub fn print_error(msg: &str) {
-    println!("{}", style(msg).red());
+    println!("{} {}", style("ERROR:").red(), style(msg).red());
 }
 
 pub fn handle_plural(number: &usize, word: &str) -> String {
