@@ -99,6 +99,10 @@ fn find_todos_in_file(
             if !prev_issues.contains(title.as_str()) {
                 let issue = Issue::new(title, body);
                 issues_in_file.push(issue);
+            } else if is_verbose {
+                cli::print_warning(
+                    "This issue was already opened in the remote repo.",
+                );
             }
         }
     }
