@@ -29,7 +29,7 @@ pub fn find_all_todos(
         println!("Searching all files tracked by git for TODO comments...");
     } else {
         println!(
-            "Searching all files with pattern \"{}\" for TODO comments...",
+            "Searching all files matching pattern \"{}\" for TODO comments...",
             pattern_str
         );
     }
@@ -46,9 +46,6 @@ pub fn find_all_todos(
                         cli::handle_plural(&num_issues, "TODO"),
                         style(file).italic()
                     );
-                    if is_verbose {
-                        println!();
-                    }
                     file_to_issues.insert(file.clone(), vector);
                     total += num_issues;
                 }
@@ -81,6 +78,9 @@ fn find_todos_in_file(
     let buffer = BufReader::new(file);
     let mut issues_in_file = Vec::new();
 
+    if is_verbose {
+        cli::print_dim(&format!("Searching {}", path).to_string());
+    }
     let mut line_number = 0;
     for line_result in buffer.lines() {
         if let Err(e) = line_result {

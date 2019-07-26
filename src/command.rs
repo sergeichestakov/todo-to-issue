@@ -5,7 +5,7 @@ use dialoguer::PasswordInput;
 
 pub fn read_access_token() -> String {
     //! Reads in a user's personal access token from GitHub.
-    println!("Please enter your personal access token.");
+    println!("Please paste your personal access token from GitHub below.");
     PasswordInput::new()
         .with_prompt("Token")
         .interact()

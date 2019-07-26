@@ -163,6 +163,10 @@ pub fn print_error(msg: &str) {
     println!("{} {}", style("ERROR:").red(), style(msg).red());
 }
 
+pub fn print_dim(msg: &str) {
+    println!("{}", style(msg).dim());
+}
+
 pub fn handle_plural(number: &usize, word: &str) -> String {
     match number {
         1 => word.to_string(),
