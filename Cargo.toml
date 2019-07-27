@@ -2,6 +2,15 @@
 name = "todo-to-issue"
 version = "0.1.0"
 authors = ["Sergei Chestakov <sergei332@gmail.com>"]
+description = "CLI tool that converts forgotten TODO comments into actionable GitHub issues."
+license = "MIT"
+readme = "README.md"
+exclude = ["dist/"]
+keywords = ["TODO", "comments", "cli", "GitHub", "issues"]
+categories = ["command-line-utilities", "text-processing", "development-tools"]
+documentation ="https://github.com/sergeichestakov/todo-to-issue/"
+homepage ="https://github.com/sergeichestakov/todo-to-issue/"
+repository ="https://github.com/sergeichestakov/todo-to-issue/"
 edition = "2018"
 
 [dependencies]
