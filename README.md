@@ -2,6 +2,7 @@
 
 CLI tool that converts forgotten TODO comments into actionable GitHub issues.
 
+![Screenshot](https://user-images.githubusercontent.com/24947334/62002420-74b4fc80-b0b8-11e9-8fc8-fa469926b106.png?s=100)
 ## Installation
 
 #### MacOS
