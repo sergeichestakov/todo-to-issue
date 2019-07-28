@@ -2,6 +2,26 @@
 
 CLI tool that converts forgotten TODO comments into actionable GitHub issues.
 
+## Installation
+
+#### MacOS
+```bash
+brew tap sergeichestakov/taproom
+brew install todo-to-issue
+```
+
+#### Ubuntu/Debian
+```bash
+wget https://github.com/sergeichestakov/todo-to-issue/raw/master/dist/todo-to-issue_amd64.deb
+sudo dpkg -i todo-to-issue_amd64.deb
+```
+
+#### Cargo
+```bash
+cargo install todo-to-issue
+``` 
+Make sure `${HOME}/.cargo/bin` is in your PATH to be able to run installed binaries.
+
 ## How to use
 
 1. Make sure you generate a [Personal Access Token](https://github.com/settings/tokens/new) on GitHub  with `public_repo` or `repo` scope.
@@ -23,7 +43,6 @@ Running this command will read every file tracked by git for TODO comments, gene
 - `Open Issue` will create a new GitHub issue with a `TODO` label, based on the generated title and body.
 
 > By default, the title here is simply the rest of the comment after `TODO:` and the description contains the line and file the comment appears in.
-
 - `Edit Issue` will open your default editor and allow you to change the title and body before opening the issue. The only restriction here is that the edited issue must be of the following format:
 ```
 Title: Your one line title here.
