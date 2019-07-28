@@ -1,6 +1,6 @@
 [package]
 name = "todo-to-issue"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Sergei Chestakov <sergei332@gmail.com>"]
 description = "CLI tool that converts forgotten TODO comments into actionable GitHub issues."
 license = "MIT"
