@@ -11,7 +11,7 @@ fn main() {
         Some(args) => args,
         None => return,
     };
-    let remote = match command::get_remote_name() {
+    let remote = match command::get_remote_name(args.is_dry_run()) {
         Some(remote) => remote,
         None => return,
     };

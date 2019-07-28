@@ -25,7 +25,7 @@ pub fn is_git_repo() -> bool {
     !output.is_empty()
 }
 
-pub fn get_remote_name() -> Option<String> {
+pub fn get_remote_name(is_dry_run: bool) -> Option<String> {
     //! Executes the command `git remote get-url origin`.
     //! Parses the result to return a string of the form :username/:repo
     //! if successful. Otherwise, returns None if there is no remote.
@@ -40,8 +40,18 @@ pub fn get_remote_name() -> Option<String> {
     // So we must remove the protocol/domain and .git suffix.
     let split: Vec<&str> = output.split("github.com/").collect();
     if split.len() < 2 {
-        cli::print_error("No remote found.");
-        return None;
+        match is_dry_run {
+            true => {
+                cli::print_warning(
+                    "No remote found. Searching for TODOs anyways.",
+                );
+                return Some(String::new());
+            }
+            false => {
+                cli::print_error("No remote found.");
+                return None;
+            }
+        }
     }
     let remote = split[1].to_string();
     let vec: Vec<&str> = remote.split(".git").collect();
