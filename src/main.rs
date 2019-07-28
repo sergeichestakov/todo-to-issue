@@ -11,8 +11,12 @@ fn main() {
         Some(args) => args,
         None => return,
     };
+    let remote = match command::get_remote_name() {
+        Some(remote) => remote,
+        None => return,
+    };
 
-    let request = Request::new(args.get_token());
+    let request = Request::new(args.get_token(), remote);
     let issues = match request.get_issues(args.is_dry_run()) {
         Some(issues) => issues,
         None => return,

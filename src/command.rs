@@ -3,6 +3,8 @@ use std::str;
 
 use dialoguer::PasswordInput;
 
+use super::cli;
+
 pub fn read_access_token() -> String {
     //! Reads in a user's personal access token from GitHub.
     println!("Please paste your personal access token from GitHub below.");
@@ -23,9 +25,10 @@ pub fn is_git_repo() -> bool {
     !output.is_empty()
 }
 
-pub fn get_remote_name() -> String {
+pub fn get_remote_name() -> Option<String> {
     //! Executes the command `git remote get-url origin`.
-    //! Parses the result to return a string of the form :username/:repo.
+    //! Parses the result to return a string of the form :username/:repo
+    //! if successful. Otherwise, returns None if there is no remote.
     let command = Command::new("git")
         .arg("remote")
         .arg("get-url")
@@ -36,10 +39,14 @@ pub fn get_remote_name() -> String {
     // Output is of the form https://github.com/:username/:repo.git
     // So we must remove the protocol/domain and .git suffix.
     let split: Vec<&str> = output.split("github.com/").collect();
+    if split.len() < 2 {
+        cli::print_error("No remote found.");
+        return None;
+    }
     let remote = split[1].to_string();
     let vec: Vec<&str> = remote.split(".git").collect();
 
-    vec[0].to_string()
+    Some(vec[0].to_string())
 }
 
 pub fn get_tracked_files() -> Vec<String> {

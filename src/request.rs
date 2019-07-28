@@ -6,7 +6,6 @@ use reqwest::StatusCode;
 use serde_json::json;
 
 use super::cli;
-use super::command;
 use super::issue;
 
 use issue::Issue;
@@ -21,12 +20,10 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(token: String) -> Request {
+    pub fn new(token: String, remote: String) -> Request {
         //! Creates a new request object that encapsulates the http client,
         //! url formatted with the API endpoint and user's remote repo,
         //! and auth header containing the user's token.
-        let remote = command::get_remote_name();
-
         Request {
             client: reqwest::Client::new(),
             url: format!("{}/repos/{}/issues", API_ENDPOINT, remote)
