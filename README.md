@@ -75,6 +75,8 @@ If you're not doing a dry run, running this command will also query all of the p
 
 ## Local Development
 Make sure you have Rust [installed](https://www.rust-lang.org/tools/install).
+
+On Linux you also have to install OpenSSL via `sudo apt-get install pkg-config libssl-dev`. See the [docs](https://docs.rs/openssl/0.10.24/openssl/) for more.
 ```bash
 git clone https://github.com/sergeichestakov/todo-to-issue.git
 cd todo-to-issue
