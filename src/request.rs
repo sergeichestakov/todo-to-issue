@@ -1,14 +1,11 @@
-use std::collections::HashSet;
-
+use super::cli;
+use super::issue;
 use console::style;
+use issue::Issue;
 use reqwest::header::AUTHORIZATION;
 use reqwest::StatusCode;
 use serde_json::json;
-
-use super::cli;
-use super::issue;
-
-use issue::Issue;
+use std::collections::HashSet;
 
 const API_ENDPOINT: &str = "https://api.github.com";
 
@@ -33,7 +30,7 @@ impl Request {
         }
     }
 
-    pub fn open_issue(&self, issue: &Issue) -> Option<usize> {
+    pub fn open_issue(&self, issue: &Issue, label: &String) -> Option<usize> {
         //! Makes a POST request to create a new issue with
         //! the inputted params (title and description).
         //!
@@ -43,7 +40,7 @@ impl Request {
             .client
             .post(&self.url)
             .header(AUTHORIZATION, self.auth_header.clone())
-            .json(&issue.to_json())
+            .json(&issue.to_json(&label))
             .send()
             .expect("Failed to create issue");
 
@@ -57,7 +54,11 @@ impl Request {
         }
     }
 
-    pub fn get_issues(&self, is_dry_run: bool) -> Option<HashSet<String>> {
+    pub fn get_issues(
+        &self,
+        is_dry_run: bool,
+        label: String,
+    ) -> Option<HashSet<String>> {
         //! Makes a GET request to retrieve all issues (open and closed)
         //! with a todo label in the remote repository.
         //!
@@ -69,12 +70,12 @@ impl Request {
 
         println!(
             "Fetching all issues with {} label from {}",
-            style(issue::LABEL).cyan(),
+            style(format!("issue::{}", label)).cyan(),
             style(&self.remote_url).italic()
         );
 
         let params = json!({
-            "labels": issue::LABEL,
+            "labels": format!("issue::{}", label),
             "state": "all",
         });
         let mut response = self

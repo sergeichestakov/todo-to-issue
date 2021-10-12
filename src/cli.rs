@@ -24,6 +24,7 @@ pub struct Args {
     token: String,
     is_dry_run: bool,
     is_verbose: bool,
+    label: String,
 }
 
 impl Args {
@@ -41,6 +42,10 @@ impl Args {
 
     pub fn is_verbose(&self) -> bool {
         self.is_verbose
+    }
+
+    pub fn get_label(&self) -> String {
+        self.label.clone()
     }
 }
 
@@ -78,6 +83,13 @@ pub fn init() -> Option<Args> {
                 .long("verbose")
                 .help("Makes output more descriptive"),
         )
+        .arg(
+            Arg::with_name("label")
+                .short("l")
+                .long("label")
+                .help("Sets the lable to search for like TODO")
+                .takes_value(true),
+        )
         .get_matches();
 
     if !command::is_git_repo() {
@@ -103,17 +115,21 @@ pub fn init() -> Option<Args> {
         },
     };
 
+    let label = matches.value_of("label").unwrap_or("TODO");
+
     return Some(Args {
         pattern,
         token,
         is_dry_run,
         is_verbose,
+        label: label.to_string(),
     });
 }
 
 pub fn output_issues_and_prompt_user(
     request: &Request,
     map: &HashMap<String, Vec<Issue>>,
+    label: &String,
 ) {
     //! Outputs every todo comment found and prompts the user for action.
     //!
@@ -137,8 +153,8 @@ pub fn output_issues_and_prompt_user(
                 .unwrap();
 
             let done = match selection {
-                OPEN => open_issue(&request, &issue),
-                EDIT => edit_issue(&request, &issue),
+                OPEN => open_issue(&request, &issue, &label),
+                EDIT => edit_issue(&request, &issue, &label),
                 SKIP => false,
                 _ => true,
             };
@@ -174,7 +190,7 @@ pub fn handle_plural(number: &usize, word: &str) -> String {
     }
 }
 
-fn edit_issue(request: &Request, issue: &Issue) -> bool {
+fn edit_issue(request: &Request, issue: &Issue, label: &String) -> bool {
     //! Opens the user's default editor and allows them to edit an issue's
     //! title and body before opening it.
     //!
@@ -187,7 +203,7 @@ fn edit_issue(request: &Request, issue: &Issue) -> bool {
     match result {
         Some(input) => match Issue::from_string(input) {
             Some(new_issue) => {
-                return open_issue(request, &new_issue);
+                return open_issue(request, &new_issue, &label);
             }
             None => print_warning("Invalid format. Not creating issue."),
         },
@@ -199,10 +215,10 @@ fn edit_issue(request: &Request, issue: &Issue) -> bool {
     false
 }
 
-fn open_issue(request: &Request, issue: &Issue) -> bool {
+fn open_issue(request: &Request, issue: &Issue, label: &String) -> bool {
     //! Creates the GitHub issue and outputs the result.
     //! Returns a bool indicating whether or not to terminate the program.
-    match request.open_issue(issue) {
+    match request.open_issue(issue, &label) {
         Some(issue_number) => {
             let success_msg = format!(
                 "Successfully opened issue #{}: \"{}\"",
