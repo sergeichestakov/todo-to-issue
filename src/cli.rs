@@ -55,7 +55,7 @@ pub fn init() -> Option<Args> {
     //! Returns an Option containing the Args as a struct or None
     //! if the user is not in a git repo.
     let matches = App::new("todo-to-issue")
-        .version("0.1.1")
+        .version("0.2.0")
         .author("Sergei Chestakov <sergei332@gmail.com>")
         .about("Converts TODO comments into GitHub issues")
         .arg(
