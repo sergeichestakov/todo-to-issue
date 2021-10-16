@@ -2,7 +2,7 @@ use console::style;
 use serde::Deserialize;
 use serde_json::{json, value::Value};
 
-pub const LABEL: &str = "TODO";
+// pub const LABEL: &str = "TODO";
 const TITLE_PREFIX: &str = "Title:";
 const BODY_PREFIX: &str = "Body:";
 
@@ -88,12 +88,12 @@ impl Issue {
         .to_string()
     }
 
-    pub fn to_json(&self) -> Value {
+    pub fn to_json(&self, label: &String) -> Value {
         json!({
             "title": &self.title,
             "body": &self.body,
             "labels": [
-                LABEL,
+                label,
             ]
         })
     }

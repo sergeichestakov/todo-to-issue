@@ -8,13 +8,14 @@ use super::issue;
 use console::style;
 use issue::Issue;
 
-const TODO: &str = "TODO";
+// const TODO: &str = "TODO";
 
-pub fn find_all_todos(
+pub fn find_all_labels(
     files: &Vec<String>,
     issues: &HashSet<String>,
     pattern: &glob::Pattern,
     is_verbose: bool,
+    label: &String,
 ) -> HashMap<String, Vec<Issue>> {
     //! Reads every file that matches the specified glob pattern
     //! and searches for "todo" comments line by line.
@@ -26,24 +27,28 @@ pub fn find_all_todos(
 
     let pattern_str = pattern.as_str();
     if pattern_str == "*" {
-        println!("Searching all files tracked by git for TODO comments...");
+        println!(
+            "Searching all files tracked by git for {} comments...",
+            label
+        );
     } else {
         println!(
-            "Searching all files matching pattern \"{}\" for TODO comments...",
-            pattern_str
+            "Searching all files matching pattern \"{}\" for {}comments...",
+            pattern_str, label,
         );
     }
 
     for file in files {
         if pattern.matches(&file) {
-            let result = find_todos_in_file(&file, &issues, is_verbose);
+            let result =
+                find_labels_in_file(&file, &issues, is_verbose, &label);
             if let Ok(vector) = result {
                 let num_issues = vector.len();
                 if num_issues > 0 {
                     println!(
                         "Found {} {} in {}",
                         style(num_issues).bold(),
-                        cli::handle_plural(&num_issues, "TODO"),
+                        cli::handle_plural(&num_issues, &label),
                         style(file).italic()
                     );
                     file_to_issues.insert(file.clone(), vector);
@@ -54,22 +59,25 @@ pub fn find_all_todos(
     }
 
     match total {
-        0 => cli::print_success("No TODOs found. You're all set!"),
+        0 => {
+            cli::print_success(&format!("No {}s found. You're all set!", label))
+        }
         num_issues => println!(
             "Found {} {} total.",
             style(num_issues).bold(),
-            cli::handle_plural(&num_issues, "TODO")
+            cli::handle_plural(&num_issues, &format!("{}", label))
         ),
     }
 
     file_to_issues
 }
 
-fn find_todos_in_file(
+fn find_labels_in_file(
     path: &str,
     prev_issues: &HashSet<String>,
     is_verbose: bool,
-) -> io::Result<(Vec<Issue>)> {
+    label: &String,
+) -> io::Result<Vec<Issue>> {
     //! Reads every line in a file for a "todo" comment, creating an Issue
     //! object for each one with the parsed title and description.
     //!
@@ -89,9 +97,9 @@ fn find_todos_in_file(
         line_number += 1;
 
         let line = line_result.unwrap();
-        if contains_todo(&line) {
-            let title = extract_title(&line);
-            let body = create_body(&line_number, path);
+        if contains_label(&line, &label) {
+            let title = extract_title(&line, &label);
+            let body = create_body(&line_number, path, &label);
 
             if is_verbose {
                 println!("Line {}: \"{}\"", &line_number, title)
@@ -110,7 +118,7 @@ fn find_todos_in_file(
     Ok(issues_in_file)
 }
 
-fn contains_todo(line: &str) -> bool {
+fn contains_label(line: &str, label: &String) -> bool {
     //! Returns if a line contains a todo comment.
     //! Looks for both C and Bash style comments.
     let comment = match line.find("//") {
@@ -118,38 +126,39 @@ fn contains_todo(line: &str) -> bool {
         None => line.find("#"),
     };
 
-    let todo = line.find(TODO);
-    if comment.is_some() && todo.is_some() {
+    let a_label = line.find(&*label);
+    if comment.is_some() && a_label.is_some() {
         let comment_index = comment.unwrap();
-        let todo_index = todo.unwrap();
-        return todo_index > comment_index;
+        let label_index = a_label.unwrap();
+        return label_index > comment_index;
     }
 
     false
 }
 
-fn extract_title(line: &str) -> String {
+fn extract_title(line: &str, label: &String) -> String {
     //! Parses a line containing a todo comment and returns the
     //! remainder of the String after "todo" to be used as the title of a
     //! new GitHub issue.
-    let vec: Vec<&str> = line.split(TODO).collect();
-    let after_todo = vec[1];
-    let title = if after_todo.starts_with(":") {
-        &after_todo[1..]
+    //FIXME: some issue here
+    let vec: Vec<&str> = line.split(&*label).collect();
+    let after_label = vec[1];
+    let title = if after_label.starts_with(":") {
+        &after_label[1..]
     } else {
-        after_todo
+        after_label
     }
     .trim();
 
     title.to_string()
 }
 
-fn create_body(line_number: &u32, file_path: &str) -> String {
+fn create_body(line_number: &u32, file_path: &str, label: &String) -> String {
     //! Creates a generic description for a new GitHub issue
     //! based on a "todo" comment.
     format!(
-        "Found a TODO comment on line {} of file {}",
-        line_number, file_path
+        "Found a {} comment on line {} of file {}",
+        label, line_number, file_path
     )
     .to_string()
 }
